@@ -139,3 +139,7 @@ L5 now generates applicable draft parameter groups using L1 operating modes/ener
 All generated candidates currently remain pending manufacturer confirmation: no authoritative model-specific parameter pack has been imported and no default settings are invented. See `docs/L5_SETTINGS.md` for storage and validation details. Original baseline files remain unchanged.
 
 Validated: production build, 27 backend tests and 11 frontend/browser suite tests. Open http://127.0.0.1:8000/ and select L5 系统设置.
+
+### L6 actionable operating-condition data review
+
+L6 now lists missing information, setting conflicts and pending manufacturer confirmation with layer filters and links to the affected project/device/setting/connection. Modifications invalidate the previous check. Connection correction keeps existing edge identity; editing values or references never certifies manufacturer applicability. The result always separates static data checks from on-site operating verification. See `docs/L6_READINESS.md` for coverage, navigation and validation boundaries.

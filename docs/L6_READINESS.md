@@ -1,0 +1,11 @@
+# L6 operating-condition data review
+
+L6 checks the current L1-L5 draft, with rule identifier L6-READINESS-1. It separates missing information, setting conflicts and pending manufacturer confirmation. Layer filtering and per-issue navigation expose the affected device, setting, project field or connection. The result is invalidated whenever engineering data changes, including save/reload; it is not a persisted commissioning certificate.
+
+Coverage includes missing project fields, L1 framework object gaps, device identity/site information, unverified model sources, devices without recorded connections, generated planned/site settings, version mismatch, planned/site differences, document gaps, and existing authoritative backend schema/interface/numeric checks. Generic candidate settings remain pending manufacturer confirmation even after values or references are entered. Framework coverage checks object types, not electrical design adequacy.
+
+Navigation opens L3 device details, focuses an L5 input or its stale-version row, opens L1 project fields, or preloads the L4 device-first editor. Connection correction retains the edge ID and existing references rather than deleting the graph relationship. Errors without an editable mapped object go to technical collaboration and remain unresolved. LIVOLTEK manufacturer-owned fields stay read-only; user editing cannot certify manufacturer data or engineering approval. Engineering document references can be supplied without changing approved values.
+
+No findings / successful data rules never means normal operation is established. L6 always states that installation wiring, protection action, communication performance and loaded operation require qualified on-site verification. EPC electrical design, statutory inspection and contractual acceptance remain separate responsibilities.
+
+Validation: production TypeScript/Vite build, 27 backend tests, full 13-test regression before the final connection-correction addition, plus targeted tests for L1/L3/L5 navigation, stale-result invalidation, resolved-gap removal, remaining manufacturer confirmation, connection correction identity/persistence and existing connection workflows. Rule-error injection in the connection browser test exercises navigation without storing an invalid graph.
