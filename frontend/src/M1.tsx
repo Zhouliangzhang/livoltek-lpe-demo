@@ -10,7 +10,7 @@ import type {Issue} from './readinessIssues'
 import {ConnectionEditor,sourcePorts} from './ConnectionEditor'
 import {projectFramework,completionEvidence,templateVersion} from './projectTopology'
 
-type Props={model:Model;change:(m:Model)=>void;selected:string;select:(id:string)=>void;flows:Record<string,Flow>;review:()=>void;reviews:Review[];revision:number;scenario:string;setScenario:(s:string)=>void;saveConnection:(model:Model)=>Promise<void>;enterInstallation:()=>void;navigationRequest:number}
+type Props={model:Model;change:(m:Model)=>void;selected:string;select:(id:string)=>void;flows:Record<string,Flow>;review:()=>void;reviews:Review[];revision:number;scenario:string;setScenario:(s:string)=>void;saveConnection:(model:Model)=>Promise<void>;enterInstallation:()=>void;navigationRequest:number;externalIssue?:Issue|null}
 type Value={value:number;unit:string;source:string;status?:string;source_ref?:string}
 type Parameter={parameter_id:string;owner_id:string;name:string;planned:Value|null;actual:Value|null;approved:Value|null;criticality:string;reference_doc?:string|null}
 const labels:Record<string,string>={PCC:'并网点',LV_BUS:'低压母线',MV_BUS:'中压母线',TRANSFORMER_ZONE:'变压器区域',TRANSFORMER:'变压器',FEEDER:'馈线',BREAKER:'断路器',BESS:'储能系统',PV_INVERTER:'光伏逆变器',METER:'电表',EMS:'能源管理',LOAD:'负载',GENERATOR:'发电机'}
@@ -18,7 +18,7 @@ const kinds:Kind[]=['ELECTRICAL','COMMUNICATION','CONTROL']
 const kindName={ELECTRICAL:'电气',COMMUNICATION:'通信',CONTROL:'控制'}
 const uid=(s:string)=>s+'_'+crypto.randomUUID().slice(0,8)
 const demoCode='LIVOLTEK:DEMO-BESS-125:DEMO-SN-0001'
-export function M1({model,change,selected,select,flows,review,reviews,revision,scenario,setScenario,saveConnection,enterInstallation,navigationRequest}:Props){
+export function M1({model,change,selected,select,flows,review,reviews,revision,scenario,setScenario,saveConnection,enterInstallation,navigationRequest,externalIssue}:Props){
  const [mode,setMode]=useState<'scan'|'manual'|'structure'|null>(null),[layer,setLayer]=useState<Kind>('ELECTRICAL'),[panel,setPanel]=useState('型号与资产'),[bottom,setBottom]=useState('配置核对')
  const [stage,setStage]=useState('L2'),[nextTarget,setNextTarget]=useState<string|null>(null)
  const currentRequired=useMemo(()=>stageRequirements(model,stage),[model,stage])
@@ -28,6 +28,8 @@ export function M1({model,change,selected,select,flows,review,reviews,revision,s
  useEffect(()=>{if(navigationRequest)setNextTarget('M2')},[navigationRequest])
  const [issueTarget,setIssueTarget]=useState<Issue|null>(null)
  function locateIssue(issue:Issue){if(issue.layer==='L6'){select(model.project.project_id);review();return}setIssueTarget({...issue});setStage(issue.layer==='L1'?'L2':issue.layer);setBottom('规则与评审');setSearch('');const linkedEdge=model.edges.find(e=>e.edge_id===issue.rowId);if(linkedEdge)setLayer(linkedEdge.edge_type);else if(issue.layer==='L4'&&issue.nodeId&&!sourcePorts(model,issue.nodeId,layer).length){const compatible=kinds.find(k=>sourcePorts(model,issue.nodeId!,k).length);if(compatible)setLayer(compatible)}if(issue.nodeId)select(issue.nodeId)}
+ useEffect(()=>{setIssueTarget(null)},[model.project.project_id])
+ useEffect(()=>{if(externalIssue)locateIssue(externalIssue)},[externalIssue,model.project.project_id])
  useEffect(()=>{
   if(!issueTarget)return
   if(issueTarget.layer==='L3'&&issueTarget.nodeId){setDetailId(issueTarget.nodeId);setPanel('型号与资产')}
@@ -39,7 +41,6 @@ export function M1({model,change,selected,select,flows,review,reviews,revision,s
   },80)
   return()=>clearTimeout(timer)
  },[issueTarget])
- useEffect(()=>{setIssueTarget(null)},[model.project.project_id])
 
  const [detailId,setDetailId]=useState<string|null>(null)
  useEffect(()=>{setDetailId(stage==='L3'&&issueTarget?.layer==='L3'?issueTarget.nodeId||null:null)},[model.project.project_id,stage])

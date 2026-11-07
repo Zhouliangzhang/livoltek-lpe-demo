@@ -62,7 +62,7 @@ test('LV-01 editing, persistence, telemetry, SOP review and generation',async({p
  await expect(page.getByText('Check third-party interface map before commissioning',{exact:true})).toBeVisible()
  await page.getByRole('button',{name:/SOP 模板库/}).click()
  await page.getByRole('button',{name:'编辑 / 评审'}).first().click()
- await page.getByLabel('来源文档').fill('DEMO-APPROVAL-REF')
+ await page.getByLabel('模板来源文档').fill('DEMO-APPROVAL-REF')
  await page.getByLabel('模拟评审状态').selectOption('APPROVED')
  await page.getByRole('button',{name:'保存新版本'}).click()
  await expect(page.locator('.notice')).toContainText('新模板版本已保存')

@@ -20,7 +20,7 @@ test('20-unit pilot persists, renders, flags real gaps, locates and generates bl
  await page.getByRole('button',{name:'02 引导式安装',exact:true}).click()
  await page.getByRole('button',{name:'生成安装计划',exact:true}).click()
  await expect(page.locator('.task')).toHaveCount(9)
- await expect(page.locator('.task').filter({hasText:'BLOCKED'})).toHaveCount(9)
+ await expect(page.locator('.task[data-readiness="BLOCKED"]')).toHaveCount(9)
  const findings=readinessIssues(model as unknown as Model)
  console.log('CI20 findings',JSON.stringify(Object.fromEntries(['缺失信息','设置冲突','待厂家确认'].map(c=>[c,findings.filter(i=>i.category===c).length]))))
 })
