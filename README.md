@@ -107,3 +107,13 @@ Device details are hidden by default and after adding an asset. Clicking a devic
 LIVOLTEK identity/master data is read-only in the UI: manufacturer/model, scanned SN, catalogue document and port template. Users supplement the site label, installed location, observed firmware and structure assignment. Scan intake still uses the explicitly marked demo catalogue; live manufacturer lookup and camera decoding remain unconnected. Third-party manufacturer/model/document and SN can be manually entered or corrected; corrections remain unverified and copy shared model records before changing them.
 
 Validated via production build and both browser workflows: default-hidden details, opening/closing, scanner-owned read-only fields, editable third-party data, persistence, domain validation and the existing read-only topology/M2 regressions.
+
+### L1-driven progressive topology
+
+Topology now starts from an explicit `L1-FRAMEWORK-DEMO-1` presentation template based on project structure, voltage, energy composition and operating mode (M1 V1.2 classification and layered-view requirements). It exists even when L2-L6 records are empty. Missing structural/device types appear as labelled dashed placeholders; supplied objects replace matching placeholders. Country and EPC remain explicit project context, not implied country-specific approved design.
+
+Placeholders are display-only: they create no persisted assets, ports, assignments or electrical edges. Existing engineering records are never discarded when the project definition changes. Type coverage is not proof of per-zone engineering correctness; LV-02 shows minimum zone requirements without inventing interties, and MV-03 remains a provisional specialization. Physical/communication/control edges are rendered only from recorded port-level connections.
+
+The overview reports L2 template coverage, L3 SN/model-version coverage, L4 recorded connections, L5 planned/actual/approved presence, and L6 current-revision review/baseline state. These are evidence counts, not approval or complete-design claims. The original baselines and manufacturer approval boundaries are unchanged.
+
+Validated: production build and five tests (three framework cases plus both browser regression workflows).

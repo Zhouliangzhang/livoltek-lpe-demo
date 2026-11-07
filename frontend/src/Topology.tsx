@@ -1,24 +1,12 @@
 import {useEffect,useRef} from 'react'
 import {Graph} from '@antv/x6'
 import type {Model,Kind,Flow} from './types'
+import {projectFramework} from './projectTopology'
 
 export const colors:Record<Kind,string>={ELECTRICAL:'#16a085',COMMUNICATION:'#4488de',CONTROL:'#bc81e9'}
 const symbols:Record<string,string>={PCC:'⌁',BESS:'▥',EMS:'▤',METER:'◉',PV_INVERTER:'☀',LOAD:'▦',BREAKER:'⊟',LV_BUS:'━',GENERATOR:'G',ATS:'⇄',TRANSFORMER:'◎'}
-// Display geometry is derived from recorded connections, never written back to the model.
-export function automaticPositions(model:Model){
- const adjacency=new Map(model.nodes.map(n=>[n.node_id,new Set<string>()]))
- const owner=new Map(model.ports.map(p=>[p.port_id,p.node_id]))
- for(const e of model.edges.filter(e=>e.edge_type==='ELECTRICAL')){const a=owner.get(e.from_port_id),b=owner.get(e.to_port_id);if(a&&b&&a!==b){adjacency.get(a)?.add(b);adjacency.get(b)?.add(a)}}
- const ranks=new Map<string,number>(),queue:string[]=[]
- for(const n of model.nodes.filter(n=>n.node_type==='PCC').sort((a,b)=>a.node_id.localeCompare(b.node_id))){ranks.set(n.node_id,0);queue.push(n.node_id)}
- for(let i=0;i<queue.length;i++){const id=queue[i];for(const next of [...(adjacency.get(id)||[])].sort()){if(!ranks.has(next)){ranks.set(next,ranks.get(id)!+1);queue.push(next)}}}
- const groups=new Map<number,string[]>()
- for(const n of [...model.nodes].sort((a,b)=>a.node_id.localeCompare(b.node_id))){const rank=ranks.get(n.node_id)??-1;groups.set(rank,[...(groups.get(rank)||[]),n.node_id])}
- const positions:Record<string,{x:number;y:number}>={}
- const height=Math.max(1,...[...groups.entries()].filter(([r])=>r>=0).map(([,ids])=>ids.length))*125
- for(const [rank,ids] of groups){ids.forEach((id,i)=>{positions[id]=rank<0?{x:(i%5)*245,y:height+70+Math.floor(i/5)*125}:{x:rank*245,y:i*125}})}
- return positions
-}
+// L1 establishes the display framework; L2-L6 supply recorded engineering facts.
+export function automaticPositions(model:Model){return projectFramework(model).positions}
 export function Topology({model,flows}:{model:Model;flows:Record<string,Flow>}) {
  const container=useRef<HTMLDivElement>(null)
  const graphRef=useRef<Graph|null>(null)
@@ -31,7 +19,7 @@ export function Topology({model,flows}:{model:Model;flows:Record<string,Flow>}) 
  },[])
  useEffect(()=>{
   const graph=graphRef.current;if(!graph)return
-  const positions=automaticPositions(model)
+  const {positions,missing}=projectFramework(model)
   graph.clearCells()
   for(const n of model.nodes){
    const asset=model.device_assets.find(a=>a.asset_id===n.device_asset_id)
@@ -40,6 +28,9 @@ export function Topology({model,flows}:{model:Model;flows:Record<string,Flow>}) 
     attrs:{body:{fill:asset?.equipment_origin==='THIRD_PARTY'?'#fff9f0':'#fff',stroke:asset?.equipment_origin==='THIRD_PARTY'?'#dba455':'#9dafbc',rx:12,ry:12,strokeWidth:1.5},label:{text:`${symbols[(n.icon_key||'').toUpperCase()]||symbols[n.node_type]||'◇'}  ${n.name}\n${asset?.modeling_level?.split('_')[0]||'BOUNDARY'} · ${n.node_type}`,fontSize:12,fill:'#203e50',textWrap:{width:162,height:65,ellipsis:true}}},
     ports:{groups:{power:{position:'bottom',attrs:{circle:{r:5,magnet:false,stroke:colors.ELECTRICAL,fill:'#fff'}}},comm:{position:'right',attrs:{circle:{r:5,magnet:false,stroke:colors.COMMUNICATION,fill:'#fff'}}},control:{position:'top',attrs:{circle:{r:5,magnet:false,stroke:colors.CONTROL,fill:'#fff'}}}},
      items:model.ports.filter(p=>p.node_id===n.node_id).map(p=>({id:p.port_id,group:['AC','DC'].includes(p.domain)?'power':p.domain==='CONTROL_LOGICAL'?'control':'comm',attrs:{circle:{title:p.name+' · '+p.domain}}}))}})
+  }
+  for(const slot of missing){
+   graph.addNode({id:slot.id,x:slot.position.x,y:slot.position.y,width:180,height:76,shape:'rect',attrs:{body:{fill:'#f3f5f3',stroke:'#b8c6bd',strokeDasharray:'6 4',rx:12,ry:12},label:{text:`${slot.name}\nL1 待补全 · ${slot.layer}`,fontSize:11,fill:'#84998b',textWrap:{width:165,height:65,ellipsis:true}}}})
   }
   for(const e of model.edges){
    if(!model.view_layout.layer_visibility[e.edge_type])continue
