@@ -99,7 +99,3 @@ The top project layout is retained. The former three-column editor and standalon
 - Topology geometry is automatically derived from the recorded electrical graph, rooted at PCC objects. Objects without a recorded electrical path are displayed separately. It does not infer or invent connections.
 - The X6 canvas has no mutation callbacks, selection editing, node dragging, port dragging or panning. Only zooming/fit-to-view is enabled. Zoom does not dirty the engineering model. Existing saved manual layout coordinates are ignored by this view.
 - Browser regression checks cover a failed node-drag attempt leaving geometry unchanged, zoom changing the viewport without enabling Save, both intake workflows, SN rejection, connection validation, persistence and M2 regression.
-
-### Continuous vertical workflow
-
-L2, L3, L4, L5 and L6 now render together as separate sections in that order, without layer tabs. Intake actions remain embedded in L2/L3. The automatically generated, zoom-only topology appears after L6. Browser checks assert that all five sections are visible in document order and the topology follows them; intake/persistence and zoom/read-only regression checks pass.

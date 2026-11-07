@@ -4,16 +4,9 @@ test('LV-01 editing, persistence, telemetry, SOP review and generation',async({p
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message))
  await page.goto('/')
  await expect(page.getByTestId('topology-canvas').locator('.x6-node')).toHaveCount(10)
- await expect(page.getByRole('navigation',{name:'工程数据分层'})).toHaveCount(0)
- let previousY=-1
- for(const label of ['L2 作业区','L3 作业区','L4 作业区','L5 作业区','L6 作业区','自动生成系统拓扑']){
-  const region=page.getByRole('region',{name:label,exact:true})
-  await expect(region).toBeVisible()
-  const rect=await region.boundingBox();expect(rect!.y).toBeGreaterThan(previousY);previousY=rect!.y
- }
-
  await page.getByRole('button',{name:'复制为新项目'}).click()
  await expect(page.locator('.projectBar strong')).toHaveText('LV-01 新建样板')
+ await page.getByRole('button',{name:/L3 型号与资产/}).click()
  await page.getByLabel('设备名称',{exact:true}).fill('BESS Browser Test')
  await page.getByLabel('设备序列号').fill('DEMO-SN-'+Date.now())
  await page.getByRole('button',{name:'保存版本',exact:true}).click()
@@ -21,6 +14,7 @@ test('LV-01 editing, persistence, telemetry, SOP review and generation',async({p
  await page.reload()
  // The active project survives reload via localStorage.
  await expect(page.getByLabel('选择项目')).toBeVisible()
+ await page.getByRole('button',{name:/L3 型号与资产/}).click()
  await expect(page.getByLabel('设备名称',{exact:true})).toHaveValue('BESS Browser Test')
  const node=page.getByTestId('topology-canvas').locator('.x6-node').filter({hasText:'BESS Browser Test'})
  await expect(node).toBeVisible()
@@ -33,6 +27,7 @@ test('LV-01 editing, persistence, telemetry, SOP review and generation',async({p
  await expect(page.getByRole('button',{name:'保存版本',exact:true})).toBeDisabled()
  const zoomed=await node.boundingBox();expect(zoomed!.width).toBeGreaterThan(after!.width)
  await page.getByRole('button',{name:'适应全部拓扑',exact:true}).click()
+ await page.getByRole('button',{name:/L6 规则与评审/}).click()
  await page.getByLabel('模拟遥测').selectOption('reverse')
  await expect(page.locator('.flow.reverse')).toHaveCount(1)
  await page.getByLabel('模拟遥测').selectOption('stale')
