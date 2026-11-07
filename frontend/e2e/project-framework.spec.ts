@@ -23,5 +23,5 @@ test('LV-02 preserves unfilled zone requirements without inventing interties',()
  const m=empty();m.project.structure_code='LV-02'
  expect(projectFramework(m).missing.filter(s=>s.type==='TRANSFORMER_ZONE')).toHaveLength(2)
  expect(m.edges).toEqual([])
- expect(completionEvidence(m,[],1)[4][2]).toContain('DRAFT')
+ expect(completionEvidence(m,[],1).some(row=>row[0]==='L6')).toBe(false)
 })

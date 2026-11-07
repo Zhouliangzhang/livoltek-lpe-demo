@@ -51,6 +51,5 @@ export function completionEvidence(model:Model,reviews:Review[],revision:number)
   ['L3','设备身份',`${identified.length}/${model.device_assets.length} 台具备 SN 与型号版本`],
   ['L4','端口连接',`${validEdges.length} 条端口关系已录入 · 待工程核对`],
   ['L5','系统设置',`${generated.total} 项候选参数 · ${generated.manufacturerPending} 项厂家待确认`],
-  ['L6','运行条件检查',`${currentReviews.length} 条技术意见 · ${model.baseline.status} · 待现场验证`],
  ]
 }

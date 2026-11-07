@@ -33,7 +33,7 @@ test('exact model template auto-fills only missing plans and preserves actual ev
  d.master_data_version='NEW'
  expect(generateSettings({...m,device_models:[...m.device_models.filter(x=>x.model_id!==d.model_id),d]}).find(r=>r.id==='PV_02.baud_rate')?.record).toBeUndefined()
 })
-test('communication cards persist isolated bus plans and L6 opens nested device fields',async({page,request})=>{
+test('communication cards persist isolated bus plans without a separate review stage',async({page,request})=>{
  const m=sample();m.project.project_id+='-COMM';for(const p of m.parameters as {scope:string;owner_id:string}[])if(p.scope==='PROJECT')p.owner_id=m.project.project_id
  expect((await request.post('/api/projects',{data:{model:m,expected_revision:0}})).ok()).toBeTruthy()
  await page.goto('/');await page.getByLabel('选择项目').selectOption(m.project.project_id)
@@ -47,9 +47,7 @@ test('communication cards persist isolated bus plans and L6 opens nested device 
  await expect(page.getByText(/已保存不可变版本/)).toBeVisible()
  const saved=await (await request.get('/api/projects/'+m.project.project_id)).json()
  expect(generateSettings(saved.model).find(r=>r.id==='EMS_MASTER.METER_RS485.baud_rate')?.record?.planned).toBe(9600)
- await page.getByRole('button',{name:/L6 运行条件检查/}).click();await page.getByRole('button',{name:'运行数据规则检查',exact:true}).click()
- await page.getByRole('button',{name:'定位 EMS_MASTER.PV_RS485.baud_rate-planned',exact:true}).click()
- await expect(page.getByLabel('EMS_MASTER.PV_RS485.baud_rate planned',{exact:true})).toBeFocused()
+
 })
 
 test('L6 detects duplicate addresses within a bus and differing serial formats',()=>{
