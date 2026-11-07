@@ -77,3 +77,16 @@ git push origin develop
 ```
 
 本次自动提交使用 Codex <codex@localhost>，未修改您的全局 Git 身份配置。后续人工提交可在仓库内设置自己的 user.name / user.email。
+
+## M1 engineering workspace (2026-11-07)
+
+The independent React app now opens directly to the six-layer engineering workspace. WordPress/Elementor login is not required, and dev.livoltek.com has not been modified by this stage.
+
+- Three intake paths: LIVOLTEK scan input, third-party manual entry, and non-SN electrical structures.
+- Scan demo: open scan intake, fill demo code, parse, then confirm location and add. Input format: `LIVOLTEK:DEMO-BESS-125:<serial>`. This uses an explicitly illustrative local catalogue, not a manufacturer production lookup. Camera decoding is not implemented; keyboard-wedge scanners and pasted decoded payloads work.
+- Manual entry includes manufacturer/model, optional SN, firmware, location, document reference, parent structure and port domains. Entries remain unverified. Scan status never implies engineering approval.
+- Tree, typed port topology, asset/source inspector, planned/actual/approved comparison, validation/review, audit and telemetry mapping views are available. The configuration comparison is read-only in this stage.
+- Added objects and provenance are persisted through Save Version, validated by the existing schema and semantic rules. The demo does not dispatch device commands or authorize production work.
+- Validation: TypeScript/Vite build, 19 backend tests, browser workflows covering malformed scan input, duplicate SN rejection, both intake paths, invalid electrical connections, persistence, telemetry states and M2 regression.
+
+Preview: http://127.0.0.1:8000/ . Start with the existing `scripts/start.ps1` instructions above.

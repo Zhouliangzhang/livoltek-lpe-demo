@@ -10,6 +10,7 @@ export function Topology({model,onChange,onSelect,layer,flows}:{model:Model;onCh
  const current=useRef({model,onChange,onSelect,layer});current.current={model,onChange,onSelect,layer}
  const rendering=useRef(false)
  const fitted=useRef(false)
+ const nodeCount=useRef(0)
  useEffect(()=>{
   const graph=new Graph({container:container.current!,width:container.current!.clientWidth,height:560,background:{color:'#f5f8fb'},grid:{visible:true,size:20},panning:true,mousewheel:{enabled:true,minScale:0.3,maxScale:2},
    connecting:{snap:true,allowBlank:false,allowNode:false,allowLoop:false,allowMulti:false,
@@ -49,7 +50,7 @@ export function Topology({model,onChange,onSelect,layer,flows}:{model:Model;onCh
    graph.addEdge({id:e.edge_id,source:{cell:a.node_id,port:a.port_id},target:{cell:b.node_id,port:b.port_id},router:{name:'manhattan',args:{padding:25}},connector:{name:'rounded'},zIndex:0,attrs:{line:{stroke:colors[e.edge_type],strokeWidth:2,strokeDasharray:e.edge_type==='CONTROL'?'5 5':undefined}},labels:[{attrs:{label:{text:e.edge_id,fill:'#668095',fontSize:10}}}]})
   }
   rendering.current=false
-  if(!fitted.current){graph.zoomToFit({padding:35,maxScale:1});fitted.current=true}
+  if(!fitted.current||nodeCount.current!==model.nodes.length){graph.zoomToFit({padding:35,maxScale:1});fitted.current=true;nodeCount.current=model.nodes.length}
  },[model])
  useEffect(()=>{
   for(const edge of graphRef.current?.getEdges()||[]){
