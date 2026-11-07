@@ -131,3 +131,11 @@ Validated: production build and seven tests, including automatic single-port sel
 See `docs/PRODUCT_SCOPE.md` for the clarified product definition. L5 now records existing numeric planned/site system settings and preserves approved reference values read-only. L6 checks the L1-L5 input conditions and exposes missing data, discrepancies and on-site verification requirements; it does not certify normal operation. Technical collaboration is labelled separately from formal EPC engineering approval, legal inspection and acceptance. Changes invalidate prior displayed check results.
 
 Validated: production build and eight tests, including setting persistence and invalidation of prior L6 checks. Manufacturer-specific complete setting catalogues and field-operation verification are not implemented by this stage.
+
+### Generated L5 communication, EMS and storage settings
+
+L5 now generates applicable draft parameter groups using L1 operating modes/energy composition and L3 device type, interface and model/version identity. It supports device filtering, separate planned/site values, manufacturer document references, save/reload persistence, inactive-record retention and explicit reconfirmation after model-version changes. L6 reports outstanding manufacturer evidence and setting gaps.
+
+All generated candidates currently remain pending manufacturer confirmation: no authoritative model-specific parameter pack has been imported and no default settings are invented. See `docs/L5_SETTINGS.md` for storage and validation details. Original baseline files remain unchanged.
+
+Validated: production build, 27 backend tests and 11 frontend/browser suite tests. Open http://127.0.0.1:8000/ and select L5 系统设置.

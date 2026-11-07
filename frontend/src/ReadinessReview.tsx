@@ -1,7 +1,9 @@
 import type {Model} from './types'
 import {projectFramework} from './projectTopology'
+import {settingsSummary} from './settingsCatalog'
 type Validation={valid:boolean;errors:string[];warnings:string[]}
 export function readinessFindings(model:Model){
+ const generated=settingsSummary(model)
  const gaps=projectFramework(model).missing
  const assetGaps=model.device_assets.filter(a=>!a.serial_number||!a.installed_location||!a.firmware_version)
  const unverified=model.device_models.filter(m=>m.source_quality!=='VERIFIED')
@@ -14,7 +16,7 @@ export function readinessFindings(model:Model){
   {layer:'L1–L2',name:'项目框架与电气结构',pending:gaps.length>0,detail:gaps.length?`待补充：${gaps.map(g=>g.name).join('、')}`:'模板类型已覆盖；对象数量、归属及工程适用性仍需核实。'},
   {layer:'L3',name:'设备身份与现场资料',pending:assetGaps.length>0||unverified.length>0,detail:`${assetGaps.length} 台设备缺少 SN、位置或固件；${unverified.length} 份型号资料未核验。`},
   {layer:'L4',name:'端口与接口关系',pending:disconnected.length>0||!model.edges.length,detail:`${disconnected.length} 台设备尚无已录入的连接；具体接口兼容性需结合厂家协议核实。`},
-  {layer:'L5',name:'系统设置与现场一致性',pending:settingsGaps.length>0||differences.length>0,detail:`${settingsGaps.length} 项设置缺少计划值、现场值或依据；${differences.length} 项计划与实际不一致。`},
+  {layer:'L5',name:'系统设置与现场一致性',pending:settingsGaps.length>0||differences.length>0||generated.manufacturerPending>0||generated.stale>0,detail:`${generated.total} 项自动生成参数中，${generated.missing} 项缺少有效设置，${generated.manufacturerPending} 项厂家依据待确认，${generated.stale} 项版本变化。已有参数另有 ${settingsGaps.length} 项缺项、${differences.length} 项计划与实际不一致。`},
  ]
 }
 export function ReadinessReview({model,result}:{model:Model;result:Validation|null}){

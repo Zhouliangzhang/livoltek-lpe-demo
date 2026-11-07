@@ -3,6 +3,7 @@ import copy
 import hashlib
 import importlib.util
 import json
+from .l5_settings import validate_settings
 from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
@@ -86,6 +87,9 @@ def validate(model):
             errors.append(f'Layout references missing node: {key}')
     if model['baseline']['status'] != 'DRAFT':
         errors.append('Demo model writes must remain DRAFT; review decisions are separate records')
+    setting_errors, setting_warnings = validate_settings(model)
+    errors += setting_errors
+    warnings += setting_warnings
     return {'valid': not errors, 'errors': list(dict.fromkeys(errors)), 'warnings': warnings}
 
 def pilot():

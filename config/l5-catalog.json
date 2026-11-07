@@ -1,0 +1,510 @@
+{
+  "version": "L5-CHECKLIST-1",
+  "status": "DRAFT",
+  "description": "Generic candidate checklist, not manufacturer-approved parameter definitions. No defaults or manufacturer operating limits supplied. Exact model evidence must be confirmed.",
+  "parameters": [
+    {
+      "key": "addressing_mode",
+      "label": "地址分配方式",
+      "group": "通信",
+      "type": "text",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "ETHERNET"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "ip_address",
+      "label": "IP 地址",
+      "group": "通信",
+      "type": "ipv4",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "ETHERNET"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "subnet_mask",
+      "label": "子网掩码",
+      "group": "通信",
+      "type": "ipv4",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "ETHERNET"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "gateway",
+      "label": "网关地址",
+      "group": "通信",
+      "type": "ipv4",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "ETHERNET"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "network_protocol",
+      "label": "应用层通信协议",
+      "group": "通信",
+      "type": "text",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "ETHERNET"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "service_port",
+      "label": "通信服务端口",
+      "group": "通信",
+      "type": "integer",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "ETHERNET"
+      ],
+      "modes": [],
+      "features": [],
+      "min": 1,
+      "max": 65535
+    },
+    {
+      "key": "station_address",
+      "label": "站号 / 从站地址",
+      "group": "通信",
+      "type": "text",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "RS485"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "baud_rate",
+      "label": "波特率",
+      "group": "通信",
+      "type": "integer",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "RS485"
+      ],
+      "modes": [],
+      "features": [],
+      "min": 0
+    },
+    {
+      "key": "parity",
+      "label": "校验方式",
+      "group": "通信",
+      "type": "text",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "RS485"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "stop_bits",
+      "label": "停止位",
+      "group": "通信",
+      "type": "number",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "RS485"
+      ],
+      "modes": [],
+      "features": [],
+      "min": 0
+    },
+    {
+      "key": "can_bitrate",
+      "label": "CAN 比特率",
+      "group": "通信",
+      "type": "integer",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "CAN"
+      ],
+      "modes": [],
+      "features": [],
+      "min": 0
+    },
+    {
+      "key": "can_node_id",
+      "label": "CAN 节点地址",
+      "group": "通信",
+      "type": "text",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "CAN"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "can_protocol",
+      "label": "CAN 协议版本",
+      "group": "通信",
+      "type": "text",
+      "unit": "",
+      "node_types": [],
+      "domains": [
+        "CAN"
+      ],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "control_strategy",
+      "label": "EMS 控制策略",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "dispatch_priority",
+      "label": "调度优先级",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "power_feedback_source",
+      "label": "功率反馈测点 / 计量位置",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "command_authority",
+      "label": "控制权与切换规则",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "communication_loss_action",
+      "label": "通信中断处理策略",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "export_limit",
+      "label": "并网送电功率限制",
+      "group": "EMS 控制策略",
+      "type": "number",
+      "unit": "kW",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [
+        "GRID_CONNECTED"
+      ],
+      "features": []
+    },
+    {
+      "key": "grid_power_target",
+      "label": "并网点功率目标",
+      "group": "EMS 控制策略",
+      "type": "number",
+      "unit": "kW",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [
+        "GRID_CONNECTED"
+      ],
+      "features": []
+    },
+    {
+      "key": "dispatch_schedule",
+      "label": "并网调度时段 / 策略文档",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [
+        "GRID_CONNECTED"
+      ],
+      "features": []
+    },
+    {
+      "key": "island_control_mode",
+      "label": "孤岛控制方式 / 成网角色",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [
+        "ISLANDED",
+        "OFF_GRID"
+      ],
+      "features": []
+    },
+    {
+      "key": "load_priority",
+      "label": "负载优先级与减载策略",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [
+        "ISLANDED",
+        "OFF_GRID"
+      ],
+      "features": []
+    },
+    {
+      "key": "black_start_reference",
+      "label": "黑启动条件与授权依据",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [
+        "ISLANDED",
+        "OFF_GRID"
+      ],
+      "features": []
+    },
+    {
+      "key": "generator_coordination",
+      "label": "柴油机协调策略引用",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [
+        "DIESEL"
+      ]
+    },
+    {
+      "key": "pv_curtailment",
+      "label": "光伏限发协调策略",
+      "group": "EMS 控制策略",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "EMS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [
+        "PV"
+      ]
+    },
+    {
+      "key": "soc_min",
+      "label": "SOC 下限",
+      "group": "储能运行",
+      "type": "number",
+      "unit": "%",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [],
+      "min": 0,
+      "max": 100
+    },
+    {
+      "key": "soc_max",
+      "label": "SOC 上限",
+      "group": "储能运行",
+      "type": "number",
+      "unit": "%",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [],
+      "min": 0,
+      "max": 100
+    },
+    {
+      "key": "soc_target",
+      "label": "目标 SOC",
+      "group": "储能运行",
+      "type": "number",
+      "unit": "%",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [],
+      "min": 0,
+      "max": 100
+    },
+    {
+      "key": "charge_power_limit",
+      "label": "充电功率上限",
+      "group": "储能运行",
+      "type": "number",
+      "unit": "kW",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [],
+      "min": 0
+    },
+    {
+      "key": "discharge_power_limit",
+      "label": "放电功率上限",
+      "group": "储能运行",
+      "type": "number",
+      "unit": "kW",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [],
+      "min": 0
+    },
+    {
+      "key": "battery_operating_mode",
+      "label": "储能运行模式",
+      "group": "储能运行",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "bms_protocol",
+      "label": "BMS 协议 / 固件兼容依据",
+      "group": "储能运行",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "charge_schedule",
+      "label": "充放电时段设置",
+      "group": "储能运行",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [
+        "GRID_CONNECTED"
+      ],
+      "features": []
+    },
+    {
+      "key": "reserve_soc",
+      "label": "离网 / 孤岛备用 SOC",
+      "group": "储能运行",
+      "type": "number",
+      "unit": "%",
+      "node_types": [
+        "BESS",
+        "PCS"
+      ],
+      "domains": [],
+      "modes": [
+        "ISLANDED",
+        "OFF_GRID"
+      ],
+      "features": [],
+      "min": 0,
+      "max": 100
+    }
+  ]
+}
