@@ -151,3 +151,7 @@ L6 now lists missing information, setting conflicts and pending manufacturer con
 Rebuild with `.venv/Scripts/python.exe scripts/build_ci20_pilot.py`. With the local service running, append `--install` to create this project through the API; existing projects are never silently overwritten. Select CI-20 in the project menu. Candidate planned settings are separate from missing field measurements. Two explicitly simulated power profiles balance the main and collection buses; these are ideal steady-state examples, not a zero-export dynamic model.
 
 Validation: 29 backend tests and 15 frontend/browser tests, including project persistence, all 20 primary devices, L5/L6 navigation, M2 blocked guidance, power balance and stale telemetry. Existing browser tests now explicitly select their fixture rather than depending on project sort order.
+
+### Grouped read-only topology
+
+CI-20 now shows main distribution, PV collection, BESS collection and communication/control in four independently zoomable diagrams. All 75 objects and 120 recorded connections are retained; dashed endpoint references do not create assets. Electrical branches follow their recorded collection boards. Telemetry refresh preserves zoom. See `docs/GROUPED_TOPOLOGY.md` and the `docs/ci20-grouped-*.png` actual-page screenshots.
