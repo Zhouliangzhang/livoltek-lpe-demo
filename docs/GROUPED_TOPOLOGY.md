@@ -13,9 +13,11 @@ CI-20 distribution:
 | Main distribution | 8 | 0 | 6 |
 | PV collection | 34 | 1 | 34 |
 | BESS collection | 24 | 1 | 24 |
-| Communication/control | 9 | 23 | 56 |
-| Total | 75 | 25 appearances, not additional assets | 120 |
+| Communication/control | 7 | 23 | 50 |
+| Total | 73 | 25 appearances, not additional assets | 114 |
 
 PV and BESS display two five-device collection trees. Communication/control references the twenty main devices instead of mixing those lines into the electrical diagrams. Animated simulation direction remains visible; numeric power labels are retained on the main-distribution diagram to avoid branch-label collisions.
 
 Verification covers unique node ownership, exact edge conservation, endpoint availability, non-overlapping node rectangles in CI-20, deterministic layout after input ordering changes, model non-mutation, disabled dragging, zoom/fit operation, unchanged Save state and zoom retention across telemetry refresh. Small-project layout and the existing M1/M2 workflows remain covered by the browser suite.
+
+The control group now uses the user-confirmed single-iEMS architecture and five small read-only views. See SINGLE_IEMS_CONTROL.md for current screenshots and edge accounting. Earlier ci20-grouped-control.png is the historical pre-correction view.

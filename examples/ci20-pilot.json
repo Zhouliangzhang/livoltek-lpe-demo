@@ -64,7 +64,7 @@
           "pv_dc_kwp_assumed": 1500
         },
         "open_questions": [
-          "20台设备需主从分组；厂家确认级联及协议",
+          "用户确认一台iEMS管理20台设备；具体交付型号、固件及点表待核",
           "柜间距/消防/地基",
           "短路电流/选择性/电缆/接地",
           "PCC CT方向与变比/反馈符号/失联策略",
@@ -1959,7 +1959,7 @@
       "node_id": "EMS_MASTER",
       "logical_id": "EMS_MASTER",
       "node_type": "EMS",
-      "name": "iEMS 主控 · PCC 零馈协调",
+      "name": "iEMS 系统控制器 · 统一控制20台",
       "parent_node_id": "ZONE_01",
       "zone_id": "ZONE_01",
       "device_asset_id": "ASSET-EMS_MASTER",
@@ -1971,352 +1971,110 @@
         "entry_method": "PLANNED_SCENARIO",
         "assumption": true,
         "planned_location": "控制柜",
-        "scope": "Master/slave allocation is candidate; exact firmware and fleet compatibility pending",
+        "scope": "Single iEMS for 10 PV + 10 BESS confirmed by user; delivered model/firmware/point map pending",
         "l5_settings": {
           "addressing_mode": {
             "planned": "STATIC - proposed",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "ip_address": {
             "planned": "192.0.2.1",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "subnet_mask": {
             "planned": "255.255.255.0",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "network_protocol": {
             "planned": "Modbus TCP candidate; register map pending",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "station_address": {
             "planned": "1",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "control_strategy": {
             "planned": "Self-consumption with PCC zero-export; supervisory only",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "dispatch_priority": {
             "planned": "Zero-export > site demand ceiling > self-consumption; pending manufacturer review",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "power_feedback_source": {
             "planned": "METER_PCC at LV incomer; import positive; CT polarity unverified",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "command_authority": {
             "planned": "SIMULATION_ONLY - no write permission",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "communication_loss_action": {
             "planned": "Request safe power curtailment; timing and fallback pending manufacturer validation",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "export_limit": {
             "planned": 0,
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "grid_power_target": {
             "planned": 25,
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           },
           "pv_curtailment": {
-            "planned": "Via EMS_PV; when ESS cannot absorb surplus, curtail PV; pending proof",
+            "planned": "Via EMS_MASTER; when ESS cannot absorb surplus, curtail PV; pending proof",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          }
-        }
-      }
-    },
-    {
-      "node_id": "EMS_PV",
-      "logical_id": "EMS_PV",
-      "node_type": "EMS",
-      "name": "iEMS 光伏组 · 10台",
-      "parent_node_id": "ZONE_01",
-      "zone_id": "ZONE_01",
-      "device_asset_id": "ASSET-EMS_PV",
-      "icon_key": "ems",
-      "relationship_reason": "ENERGY_PATH",
-      "attributes": {
-        "source_ref": "CI20-ASSUMPTIONS-R1",
-        "source_quality": "DRAFT",
-        "entry_method": "PLANNED_SCENARIO",
-        "assumption": true,
-        "planned_location": "控制柜",
-        "scope": "Master/slave allocation is candidate; exact firmware and fleet compatibility pending",
-        "l5_settings": {
-          "addressing_mode": {
-            "planned": "STATIC - proposed",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "ip_address": {
-            "planned": "192.0.2.2",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "subnet_mask": {
-            "planned": "255.255.255.0",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "network_protocol": {
-            "planned": "Modbus TCP candidate; register map pending",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "station_address": {
-            "planned": "2",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "control_strategy": {
-            "planned": "Self-consumption with PCC zero-export; supervisory only",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "dispatch_priority": {
-            "planned": "Zero-export > site demand ceiling > self-consumption; pending manufacturer review",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "power_feedback_source": {
-            "planned": "METER_PCC at LV incomer; import positive; CT polarity unverified",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "command_authority": {
-            "planned": "SIMULATION_ONLY - no write permission",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "communication_loss_action": {
-            "planned": "Request safe power curtailment; timing and fallback pending manufacturer validation",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "export_limit": {
-            "planned": 0,
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "grid_power_target": {
-            "planned": 25,
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "pv_curtailment": {
-            "planned": "Via EMS_PV; when ESS cannot absorb surplus, curtail PV; pending proof",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          }
-        }
-      }
-    },
-    {
-      "node_id": "EMS_BESS",
-      "logical_id": "EMS_BESS",
-      "node_type": "EMS",
-      "name": "iEMS 储能组 · 10台",
-      "parent_node_id": "ZONE_01",
-      "zone_id": "ZONE_01",
-      "device_asset_id": "ASSET-EMS_BESS",
-      "icon_key": "ems",
-      "relationship_reason": "ENERGY_PATH",
-      "attributes": {
-        "source_ref": "CI20-ASSUMPTIONS-R1",
-        "source_quality": "DRAFT",
-        "entry_method": "PLANNED_SCENARIO",
-        "assumption": true,
-        "planned_location": "控制柜",
-        "scope": "Master/slave allocation is candidate; exact firmware and fleet compatibility pending",
-        "l5_settings": {
-          "addressing_mode": {
-            "planned": "STATIC - proposed",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "ip_address": {
-            "planned": "192.0.2.3",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "subnet_mask": {
-            "planned": "255.255.255.0",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "network_protocol": {
-            "planned": "Modbus TCP candidate; register map pending",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "control_strategy": {
-            "planned": "Self-consumption with PCC zero-export; supervisory only",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "dispatch_priority": {
-            "planned": "Zero-export > site demand ceiling > self-consumption; pending manufacturer review",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "power_feedback_source": {
-            "planned": "METER_PCC at LV incomer; import positive; CT polarity unverified",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "command_authority": {
-            "planned": "SIMULATION_ONLY - no write permission",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "communication_loss_action": {
-            "planned": "Request safe power curtailment; timing and fallback pending manufacturer validation",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "export_limit": {
-            "planned": 0,
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "grid_power_target": {
-            "planned": 25,
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
-            "template_version": "L5-CHECKLIST-1"
-          },
-          "pv_curtailment": {
-            "planned": "Via EMS_PV; when ESS cannot absorb surplus, curtail PV; pending proof",
-            "actual": null,
-            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
-            "model_id": "EMS-HXEM100",
-            "master_data_version": "IEMS-HXEM100-MANUAL",
+            "model_id": "EMS-USER20",
+            "master_data_version": "USER-CONFIRMED-20",
             "template_version": "L5-CHECKLIST-1"
           }
         }
@@ -4315,62 +4073,6 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "UPS_01.EMS_PV",
-      "node_id": "UPS_01",
-      "name": "EMS_PV",
-      "domain": "AC",
-      "role": "BIDIRECTIONAL",
-      "attributes": {
-        "voltage": 400,
-        "phases": 3,
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "EMS_PV.SUPPLY",
-      "node_id": "EMS_PV",
-      "name": "SUPPLY",
-      "domain": "AC",
-      "role": "BIDIRECTIONAL",
-      "attributes": {
-        "voltage": 400,
-        "phases": 3,
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "UPS_01.EMS_BESS",
-      "node_id": "UPS_01",
-      "name": "EMS_BESS",
-      "domain": "AC",
-      "role": "BIDIRECTIONAL",
-      "attributes": {
-        "voltage": 400,
-        "phases": 3,
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "EMS_BESS.SUPPLY",
-      "node_id": "EMS_BESS",
-      "name": "SUPPLY",
-      "domain": "AC",
-      "role": "BIDIRECTIONAL",
-      "attributes": {
-        "voltage": 400,
-        "phases": 3,
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
       "port_id": "UPS_01.NET_01",
       "node_id": "UPS_01",
       "name": "NET_01",
@@ -4503,8 +4205,8 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.PV_RS485",
-      "node_id": "EMS_PV",
+      "port_id": "EMS_MASTER.PV_RS485",
+      "node_id": "EMS_MASTER",
       "name": "PV_RS485",
       "domain": "RS485",
       "role": "BIDIRECTIONAL",
@@ -4791,54 +4493,6 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "NET_01.EMS_PV",
-      "node_id": "NET_01",
-      "name": "EMS_PV",
-      "domain": "ETHERNET",
-      "role": "BIDIRECTIONAL",
-      "attributes": {
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "EMS_PV.LAN",
-      "node_id": "EMS_PV",
-      "name": "LAN",
-      "domain": "ETHERNET",
-      "role": "BIDIRECTIONAL",
-      "attributes": {
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "NET_01.EMS_BESS",
-      "node_id": "NET_01",
-      "name": "EMS_BESS",
-      "domain": "ETHERNET",
-      "role": "BIDIRECTIONAL",
-      "attributes": {
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "EMS_BESS.LAN",
-      "node_id": "EMS_BESS",
-      "name": "LAN",
-      "domain": "ETHERNET",
-      "role": "BIDIRECTIONAL",
-      "attributes": {
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
       "port_id": "NET_01.BESS_01",
       "node_id": "NET_01",
       "name": "BESS_01",
@@ -5079,33 +4733,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_MASTER.PV_DISPATCH",
+      "port_id": "EMS_MASTER.PV_SETPOINT_1",
       "node_id": "EMS_MASTER",
-      "name": "PV_DISPATCH",
-      "domain": "CONTROL_LOGICAL",
-      "role": "OUT",
-      "attributes": {
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "EMS_PV.MASTER_CONTROL",
-      "node_id": "EMS_PV",
-      "name": "MASTER_CONTROL",
-      "domain": "CONTROL_LOGICAL",
-      "role": "IN",
-      "attributes": {
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "EMS_PV.SETPOINT_1",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_1",
+      "name": "PV_SETPOINT_1",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5127,9 +4757,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_2",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_2",
+      "port_id": "EMS_MASTER.PV_SETPOINT_2",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_2",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5151,9 +4781,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_3",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_3",
+      "port_id": "EMS_MASTER.PV_SETPOINT_3",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_3",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5175,9 +4805,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_4",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_4",
+      "port_id": "EMS_MASTER.PV_SETPOINT_4",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_4",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5199,9 +4829,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_5",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_5",
+      "port_id": "EMS_MASTER.PV_SETPOINT_5",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_5",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5223,9 +4853,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_6",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_6",
+      "port_id": "EMS_MASTER.PV_SETPOINT_6",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_6",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5247,9 +4877,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_7",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_7",
+      "port_id": "EMS_MASTER.PV_SETPOINT_7",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_7",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5271,9 +4901,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_8",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_8",
+      "port_id": "EMS_MASTER.PV_SETPOINT_8",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_8",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5295,9 +4925,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_9",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_9",
+      "port_id": "EMS_MASTER.PV_SETPOINT_9",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_9",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5319,9 +4949,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_PV.SETPOINT_10",
-      "node_id": "EMS_PV",
-      "name": "SETPOINT_10",
+      "port_id": "EMS_MASTER.PV_SETPOINT_10",
+      "node_id": "EMS_MASTER",
+      "name": "PV_SETPOINT_10",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5343,33 +4973,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_MASTER.BESS_DISPATCH",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_1",
       "node_id": "EMS_MASTER",
-      "name": "BESS_DISPATCH",
-      "domain": "CONTROL_LOGICAL",
-      "role": "OUT",
-      "attributes": {
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "EMS_BESS.MASTER_CONTROL",
-      "node_id": "EMS_BESS",
-      "name": "MASTER_CONTROL",
-      "domain": "CONTROL_LOGICAL",
-      "role": "IN",
-      "attributes": {
-        "source": "CI20-ASSUMPTIONS-R1",
-        "verified": false
-      },
-      "approved_spec_ref": null
-    },
-    {
-      "port_id": "EMS_BESS.SETPOINT_1",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_1",
+      "name": "BESS_SETPOINT_1",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5391,9 +4997,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_2",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_2",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_2",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_2",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5415,9 +5021,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_3",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_3",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_3",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_3",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5439,9 +5045,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_4",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_4",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_4",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_4",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5463,9 +5069,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_5",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_5",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_5",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_5",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5487,9 +5093,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_6",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_6",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_6",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_6",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5511,9 +5117,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_7",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_7",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_7",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_7",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5535,9 +5141,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_8",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_8",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_8",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_8",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5559,9 +5165,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_9",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_9",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_9",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_9",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -5583,9 +5189,9 @@
       "approved_spec_ref": null
     },
     {
-      "port_id": "EMS_BESS.SETPOINT_10",
-      "node_id": "EMS_BESS",
-      "name": "SETPOINT_10",
+      "port_id": "EMS_MASTER.BESS_SETPOINT_10",
+      "node_id": "EMS_MASTER",
+      "name": "BESS_SETPOINT_10",
       "domain": "CONTROL_LOGICAL",
       "role": "OUT",
       "attributes": {
@@ -6484,24 +6090,6 @@
     {
       "edge_id": "CI-068",
       "edge_type": "ELECTRICAL",
-      "from_port_id": "UPS_01.EMS_PV",
-      "to_port_id": "EMS_PV.SUPPLY",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-069",
-      "edge_type": "ELECTRICAL",
-      "from_port_id": "UPS_01.EMS_BESS",
-      "to_port_id": "EMS_BESS.SUPPLY",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-070",
-      "edge_type": "ELECTRICAL",
       "from_port_id": "UPS_01.NET_01",
       "to_port_id": "NET_01.SUPPLY",
       "design_ref": "CI20-ASSUMPTIONS-R1",
@@ -6509,7 +6097,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-071",
+      "edge_id": "CI-069",
       "edge_type": "ELECTRICAL",
       "from_port_id": "PCC_01.V_TAP",
       "to_port_id": "FUSE_METER.IN",
@@ -6518,7 +6106,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-072",
+      "edge_id": "CI-070",
       "edge_type": "ELECTRICAL",
       "from_port_id": "FUSE_METER.OUT",
       "to_port_id": "METER_PCC.V_INPUT",
@@ -6527,7 +6115,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-073",
+      "edge_id": "CI-071",
       "edge_type": "COMMUNICATION",
       "from_port_id": "CT_PCC.CT_SECONDARY",
       "to_port_id": "METER_PCC.CT_INPUT",
@@ -6536,7 +6124,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-074",
+      "edge_id": "CI-072",
       "edge_type": "COMMUNICATION",
       "from_port_id": "METER_PCC.RS485",
       "to_port_id": "EMS_MASTER.METER_RS485",
@@ -6545,16 +6133,16 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-075",
+      "edge_id": "CI-073",
       "edge_type": "COMMUNICATION",
-      "from_port_id": "EMS_PV.PV_RS485",
+      "from_port_id": "EMS_MASTER.PV_RS485",
       "to_port_id": "PV_RS485_BUS.MASTER",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
     },
     {
-      "edge_id": "CI-076",
+      "edge_id": "CI-074",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV1",
       "to_port_id": "PV_01.RS485",
@@ -6563,7 +6151,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-077",
+      "edge_id": "CI-075",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV2",
       "to_port_id": "PV_02.RS485",
@@ -6572,7 +6160,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-078",
+      "edge_id": "CI-076",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV3",
       "to_port_id": "PV_03.RS485",
@@ -6581,7 +6169,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-079",
+      "edge_id": "CI-077",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV4",
       "to_port_id": "PV_04.RS485",
@@ -6590,7 +6178,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-080",
+      "edge_id": "CI-078",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV5",
       "to_port_id": "PV_05.RS485",
@@ -6599,7 +6187,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-081",
+      "edge_id": "CI-079",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV6",
       "to_port_id": "PV_06.RS485",
@@ -6608,7 +6196,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-082",
+      "edge_id": "CI-080",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV7",
       "to_port_id": "PV_07.RS485",
@@ -6617,7 +6205,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-083",
+      "edge_id": "CI-081",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV8",
       "to_port_id": "PV_08.RS485",
@@ -6626,7 +6214,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-084",
+      "edge_id": "CI-082",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV9",
       "to_port_id": "PV_09.RS485",
@@ -6635,7 +6223,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-085",
+      "edge_id": "CI-083",
       "edge_type": "COMMUNICATION",
       "from_port_id": "PV_RS485_BUS.DEV10",
       "to_port_id": "PV_10.RS485",
@@ -6644,7 +6232,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-086",
+      "edge_id": "CI-084",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.EMS_MASTER",
       "to_port_id": "EMS_MASTER.LAN",
@@ -6653,25 +6241,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-087",
-      "edge_type": "COMMUNICATION",
-      "from_port_id": "NET_01.EMS_PV",
-      "to_port_id": "EMS_PV.LAN",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-088",
-      "edge_type": "COMMUNICATION",
-      "from_port_id": "NET_01.EMS_BESS",
-      "to_port_id": "EMS_BESS.LAN",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-089",
+      "edge_id": "CI-085",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_01",
       "to_port_id": "BESS_01.LAN",
@@ -6680,7 +6250,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-090",
+      "edge_id": "CI-086",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_02",
       "to_port_id": "BESS_02.LAN",
@@ -6689,7 +6259,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-091",
+      "edge_id": "CI-087",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_03",
       "to_port_id": "BESS_03.LAN",
@@ -6698,7 +6268,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-092",
+      "edge_id": "CI-088",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_04",
       "to_port_id": "BESS_04.LAN",
@@ -6707,7 +6277,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-093",
+      "edge_id": "CI-089",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_05",
       "to_port_id": "BESS_05.LAN",
@@ -6716,7 +6286,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-094",
+      "edge_id": "CI-090",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_06",
       "to_port_id": "BESS_06.LAN",
@@ -6725,7 +6295,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-095",
+      "edge_id": "CI-091",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_07",
       "to_port_id": "BESS_07.LAN",
@@ -6734,7 +6304,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-096",
+      "edge_id": "CI-092",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_08",
       "to_port_id": "BESS_08.LAN",
@@ -6743,7 +6313,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-097",
+      "edge_id": "CI-093",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_09",
       "to_port_id": "BESS_09.LAN",
@@ -6752,7 +6322,7 @@
       "attributes": {}
     },
     {
-      "edge_id": "CI-098",
+      "edge_id": "CI-094",
       "edge_type": "COMMUNICATION",
       "from_port_id": "NET_01.BESS_10",
       "to_port_id": "BESS_10.LAN",
@@ -6761,10 +6331,46 @@
       "attributes": {}
     },
     {
+      "edge_id": "CI-095",
+      "edge_type": "CONTROL",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_1",
+      "to_port_id": "PV_01.SETPOINT",
+      "design_ref": "CI20-ASSUMPTIONS-R1",
+      "review_status": "DRAFT",
+      "attributes": {}
+    },
+    {
+      "edge_id": "CI-096",
+      "edge_type": "CONTROL",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_2",
+      "to_port_id": "PV_02.SETPOINT",
+      "design_ref": "CI20-ASSUMPTIONS-R1",
+      "review_status": "DRAFT",
+      "attributes": {}
+    },
+    {
+      "edge_id": "CI-097",
+      "edge_type": "CONTROL",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_3",
+      "to_port_id": "PV_03.SETPOINT",
+      "design_ref": "CI20-ASSUMPTIONS-R1",
+      "review_status": "DRAFT",
+      "attributes": {}
+    },
+    {
+      "edge_id": "CI-098",
+      "edge_type": "CONTROL",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_4",
+      "to_port_id": "PV_04.SETPOINT",
+      "design_ref": "CI20-ASSUMPTIONS-R1",
+      "review_status": "DRAFT",
+      "attributes": {}
+    },
+    {
       "edge_id": "CI-099",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_MASTER.PV_DISPATCH",
-      "to_port_id": "EMS_PV.MASTER_CONTROL",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_5",
+      "to_port_id": "PV_05.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6772,8 +6378,8 @@
     {
       "edge_id": "CI-100",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_1",
-      "to_port_id": "PV_01.SETPOINT",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_6",
+      "to_port_id": "PV_06.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6781,8 +6387,8 @@
     {
       "edge_id": "CI-101",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_2",
-      "to_port_id": "PV_02.SETPOINT",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_7",
+      "to_port_id": "PV_07.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6790,8 +6396,8 @@
     {
       "edge_id": "CI-102",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_3",
-      "to_port_id": "PV_03.SETPOINT",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_8",
+      "to_port_id": "PV_08.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6799,8 +6405,8 @@
     {
       "edge_id": "CI-103",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_4",
-      "to_port_id": "PV_04.SETPOINT",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_9",
+      "to_port_id": "PV_09.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6808,8 +6414,8 @@
     {
       "edge_id": "CI-104",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_5",
-      "to_port_id": "PV_05.SETPOINT",
+      "from_port_id": "EMS_MASTER.PV_SETPOINT_10",
+      "to_port_id": "PV_10.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6817,8 +6423,8 @@
     {
       "edge_id": "CI-105",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_6",
-      "to_port_id": "PV_06.SETPOINT",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_1",
+      "to_port_id": "BESS_01.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6826,8 +6432,8 @@
     {
       "edge_id": "CI-106",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_7",
-      "to_port_id": "PV_07.SETPOINT",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_2",
+      "to_port_id": "BESS_02.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6835,8 +6441,8 @@
     {
       "edge_id": "CI-107",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_8",
-      "to_port_id": "PV_08.SETPOINT",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_3",
+      "to_port_id": "BESS_03.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6844,8 +6450,8 @@
     {
       "edge_id": "CI-108",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_9",
-      "to_port_id": "PV_09.SETPOINT",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_4",
+      "to_port_id": "BESS_04.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6853,8 +6459,8 @@
     {
       "edge_id": "CI-109",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_PV.SETPOINT_10",
-      "to_port_id": "PV_10.SETPOINT",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_5",
+      "to_port_id": "BESS_05.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6862,8 +6468,8 @@
     {
       "edge_id": "CI-110",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_MASTER.BESS_DISPATCH",
-      "to_port_id": "EMS_BESS.MASTER_CONTROL",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_6",
+      "to_port_id": "BESS_06.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6871,8 +6477,8 @@
     {
       "edge_id": "CI-111",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_1",
-      "to_port_id": "BESS_01.SETPOINT",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_7",
+      "to_port_id": "BESS_07.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6880,8 +6486,8 @@
     {
       "edge_id": "CI-112",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_2",
-      "to_port_id": "BESS_02.SETPOINT",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_8",
+      "to_port_id": "BESS_08.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6889,8 +6495,8 @@
     {
       "edge_id": "CI-113",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_3",
-      "to_port_id": "BESS_03.SETPOINT",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_9",
+      "to_port_id": "BESS_09.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
       "attributes": {}
@@ -6898,61 +6504,7 @@
     {
       "edge_id": "CI-114",
       "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_4",
-      "to_port_id": "BESS_04.SETPOINT",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-115",
-      "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_5",
-      "to_port_id": "BESS_05.SETPOINT",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-116",
-      "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_6",
-      "to_port_id": "BESS_06.SETPOINT",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-117",
-      "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_7",
-      "to_port_id": "BESS_07.SETPOINT",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-118",
-      "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_8",
-      "to_port_id": "BESS_08.SETPOINT",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-119",
-      "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_9",
-      "to_port_id": "BESS_09.SETPOINT",
-      "design_ref": "CI20-ASSUMPTIONS-R1",
-      "review_status": "DRAFT",
-      "attributes": {}
-    },
-    {
-      "edge_id": "CI-120",
-      "edge_type": "CONTROL",
-      "from_port_id": "EMS_BESS.SETPOINT_10",
+      "from_port_id": "EMS_MASTER.BESS_SETPOINT_10",
       "to_port_id": "BESS_10.SETPOINT",
       "design_ref": "CI20-ASSUMPTIONS-R1",
       "review_status": "DRAFT",
@@ -7008,15 +6560,15 @@
       ]
     },
     {
-      "model_id": "EMS-HXEM100",
+      "model_id": "EMS-USER20",
       "manufacturer": "LIVOLTEK",
-      "model_name": "HXEM100 · 主从级联候选",
-      "master_data_version": "IEMS-HXEM100-MANUAL",
+      "model_name": "iEMS · 20台接入，交付型号待核",
+      "master_data_version": "USER-CONFIRMED-20",
       "source_quality": "DRAFT",
-      "datasheet_ref": "https://info-support.livoltek.com/2-Product-Material/ProductFiles/others/User%20Manual_HXEM100.pdf",
+      "datasheet_ref": "CI20-ASSUMPTIONS-R1",
       "rated_parameters": {},
       "document_refs": [
-        "IEMS-HXEM100-MANUAL"
+        "USER-CONFIRMED-20"
       ]
     },
     {
@@ -7428,41 +6980,7 @@
     },
     {
       "asset_id": "ASSET-EMS_MASTER",
-      "model_id": "EMS-HXEM100",
-      "serial_number": null,
-      "sn_status": "PENDING",
-      "installed_location": null,
-      "firmware_version": null,
-      "lifecycle_status": "PLANNED",
-      "equipment_origin": "LIVOLTEK",
-      "modeling_level": "L1_FULL",
-      "responsibility_owner": "EPC / LIVOLTEK 产品支持",
-      "authorization": {
-        "read_allowed": false,
-        "write_allowed": false,
-        "test_execution_allowed": false
-      }
-    },
-    {
-      "asset_id": "ASSET-EMS_PV",
-      "model_id": "EMS-HXEM100",
-      "serial_number": null,
-      "sn_status": "PENDING",
-      "installed_location": null,
-      "firmware_version": null,
-      "lifecycle_status": "PLANNED",
-      "equipment_origin": "LIVOLTEK",
-      "modeling_level": "L1_FULL",
-      "responsibility_owner": "EPC / LIVOLTEK 产品支持",
-      "authorization": {
-        "read_allowed": false,
-        "write_allowed": false,
-        "test_execution_allowed": false
-      }
-    },
-    {
-      "asset_id": "ASSET-EMS_BESS",
-      "model_id": "EMS-HXEM100",
+      "model_id": "EMS-USER20",
       "serial_number": null,
       "sn_status": "PENDING",
       "installed_location": null,
@@ -8533,30 +8051,6 @@
     {
       "binding_id": "IF-EMS_MASTER",
       "asset_id": "ASSET-EMS_MASTER",
-      "signal_name": "SITE_INTERFACE_PENDING",
-      "direction": "READ",
-      "protocol": "Vendor mapping pending",
-      "point_ref": null,
-      "unit": null,
-      "verification_status": "UNVERIFIED",
-      "source_ref": "CI20-ASSUMPTIONS-R1",
-      "authorization_ref": null
-    },
-    {
-      "binding_id": "IF-EMS_PV",
-      "asset_id": "ASSET-EMS_PV",
-      "signal_name": "SITE_INTERFACE_PENDING",
-      "direction": "READ",
-      "protocol": "Vendor mapping pending",
-      "point_ref": null,
-      "unit": null,
-      "verification_status": "UNVERIFIED",
-      "source_ref": "CI20-ASSUMPTIONS-R1",
-      "authorization_ref": null
-    },
-    {
-      "binding_id": "IF-EMS_BESS",
-      "asset_id": "ASSET-EMS_BESS",
       "signal_name": "SITE_INTERFACE_PENDING",
       "direction": "READ",
       "protocol": "Vendor mapping pending",

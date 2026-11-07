@@ -46,10 +46,10 @@ def build():
   return node(id,kind,name,asset=aid,planned_location=location,**attrs)
  model('PV-GT3','LIVOLTEK','GT3-125K-1','PV-DS',125)
  model('BESS-261','LIVOLTEK','BES-P125X261E','BESS-DS-2025-10V1',125,261.2)
- model('EMS-HXEM100','LIVOLTEK','HXEM100 · 主从级联候选','IEMS-HXEM100-MANUAL')
+ model('EMS-USER20','LIVOLTEK','iEMS · 20台接入，交付型号待核','USER-CONFIRMED-20')
  for mid,name in [('METER','三相四线 CT 接入零馈表 · 型号待选'),('SWITCH','工业以太网交换机 24口 · 型号待选'),('UPS','控制电源 UPS · 型号及容量待核'),('CT','PCC 三相 CT 组 · 4000/5A 候选')]:model(mid,'第三方厂家待选',name)
  zone=node('ZONE_01','TRANSFORMER_ZONE','单台区 · 400V 光储工厂',parent=None)
- zone['attributes'].update(scenario_id=PROJECT_ID,source_urls=SOURCES,scope='PLANNED / SIMULATION ONLY',capacity={'pv_ac_kw':1250,'bess_kw':1250,'bess_kwh':2612,'pv_dc_kwp_assumed':1500},open_questions=['20台设备需主从分组；厂家确认级联及协议','柜间距/消防/地基','短路电流/选择性/电缆/接地','PCC CT方向与变比/反馈符号/失联策略','组件串并联与MPPT分配未设计'],operating_cases={'normal':'PV1250 + PCC25 = load800 + BESS charge475 (kW); ideal lossless simulation','reverse':'PV0 + PCC1100 + BESS discharge500 = load1600 (kW); ideal lossless simulation'})
+ zone['attributes'].update(scenario_id=PROJECT_ID,source_urls=SOURCES,scope='PLANNED / SIMULATION ONLY',capacity={'pv_ac_kw':1250,'bess_kw':1250,'bess_kwh':2612,'pv_dc_kwp_assumed':1500},open_questions=['用户确认一台iEMS管理20台设备；具体交付型号、固件及点表待核','柜间距/消防/地基','短路电流/选择性/电缆/接地','PCC CT方向与变比/反馈符号/失联策略','组件串并联与MPPT分配未设计'],operating_cases={'normal':'PV1250 + PCC25 = load800 + BESS charge475 (kW); ideal lossless simulation','reverse':'PV0 + PCC1100 + BESS discharge500 = load1600 (kW); ideal lossless simulation'})
  node('TX_01','TRANSFORMER','既有变压器 · 2500kVA 假设',rated_kva_assumed=2500,ratio_assumed='11/0.4kV',scope='LV terminal only; upstream MV outside detailed model')
  node('QF_MAIN','BREAKER','总进线 ACB · 4000AF 假设',frame_a_assumed=4000,trip_setting=None)
  device('CT_PCC','JUNCTION','PCC 三相 CT 组','CT','进线计量室')
@@ -77,24 +77,23 @@ def build():
     if group=='PV':
      array='ARRAY_'+str(i).zfill(2);node(array,'OTHER',f'PV阵列 {i:02} · 150kWp 假设',scope='Aggregated DC boundary; module model/string sizing/MPPT assignment pending; integrated inverter DC switch per source')
      edge(port(array,'DC','DC'),port(id,'DC_AGGREGATE','DC'))
- for id,name in [('EMS_MASTER','iEMS 主控 · PCC 零馈协调'),('EMS_PV','iEMS 光伏组 · 10台'),('EMS_BESS','iEMS 储能组 · 10台')]:device(id,'EMS',name,'EMS-HXEM100','控制柜',True,scope='Master/slave allocation is candidate; exact firmware and fleet compatibility pending')
+ device('EMS_MASTER','EMS','iEMS 系统控制器 · 统一控制20台','EMS-USER20','控制柜',True,scope='Single iEMS for 10 PV + 10 BESS confirmed by user; delivered model/firmware/point map pending')
  device('NET_01','OTHER','工业交换机 · 24口候选','SWITCH','控制柜')
  device('METER_PCC','METER','PCC 零馈表 · CT式候选','METER','PCC计量室',measured_edge='CI-003',import_sign='positive',external_meter_compatibility='pending; HXEM100 integrated metering alternative requires review')
  device('UPS_01','OTHER','控制电源 UPS · 候选','UPS','控制柜')
  node('QF_AUX','BREAKER','控制柜辅助电源开关 · 待选')
  edge(port('LV_BUS_01','AUX'),port('QF_AUX','IN'));edge(port('QF_AUX','OUT'),port('UPS_01','INPUT'))
- for id in ['EMS_MASTER','EMS_PV','EMS_BESS','NET_01']:edge(port('UPS_01',id),port(id,'SUPPLY'))
+ for id in ['EMS_MASTER','NET_01']:edge(port('UPS_01',id),port(id,'SUPPLY'))
  node('FUSE_METER','SWITCH','计量电压取样熔断器 · 待选')
  edge(port('PCC_01','V_TAP'),port('FUSE_METER','IN'));edge(port('FUSE_METER','OUT'),port('METER_PCC','V_INPUT'))
  edge(port('CT_PCC','CT_SECONDARY','ANALOG_IO'),port('METER_PCC','CT_INPUT','ANALOG_IO'),'COMMUNICATION')
  edge(port('METER_PCC','RS485','RS485'),port('EMS_MASTER','METER_RS485','RS485'),'COMMUNICATION')
  node('PV_RS485_BUS','JUNCTION','PV RS485 总线 · 非星形接线示意',scope='Logical multidrop bus; termination, polarity, routing and shield details pending')
- edge(port('EMS_PV','PV_RS485','RS485'),port('PV_RS485_BUS','MASTER','RS485'),'COMMUNICATION')
+ edge(port('EMS_MASTER','PV_RS485','RS485'),port('PV_RS485_BUS','MASTER','RS485'),'COMMUNICATION')
  for i in range(1,11):edge(port('PV_RS485_BUS',f'DEV{i}','RS485'),port(f'PV_{i:02}','RS485','RS485'),'COMMUNICATION')
- for id in ['EMS_MASTER','EMS_PV','EMS_BESS']+[f'BESS_{i:02}' for i in range(1,11)]:edge(port('NET_01',id,'ETHERNET'),port(id,'LAN','ETHERNET'),'COMMUNICATION')
+ for id in ['EMS_MASTER']+[f'BESS_{i:02}' for i in range(1,11)]:edge(port('NET_01',id,'ETHERNET'),port(id,'LAN','ETHERNET'),'COMMUNICATION')
  for group in ['PV','BESS']:
-  edge(port('EMS_MASTER',group+'_DISPATCH','CONTROL_LOGICAL',role='OUT'),port('EMS_'+group,'MASTER_CONTROL','CONTROL_LOGICAL',role='IN'),'CONTROL')
-  for i in range(1,11):edge(port('EMS_'+group,f'SETPOINT_{i}','CONTROL_LOGICAL',role='OUT'),port(f'{group}_{i:02}','SETPOINT','CONTROL_LOGICAL',role='IN'),'CONTROL')
+  for i in range(1,11):edge(port('EMS_MASTER',f'{group}_SETPOINT_{i}','CONTROL_LOGICAL',role='OUT'),port(f'{group}_{i:02}','SETPOINT','CONTROL_LOGICAL',role='IN'),'CONTROL')
  for n in m['nodes']:
   if not n['device_asset_id']:continue
   aid=n['device_asset_id'];m['interface_bindings'].append(dict(binding_id='IF-'+n['node_id'],asset_id=aid,signal_name='SITE_INTERFACE_PENDING',direction='READ',protocol='Vendor mapping pending',point_ref=None,unit=None,verification_status='UNVERIFIED',source_ref=REF,authorization_ref=None))
@@ -104,8 +103,8 @@ def build():
   a=next((a for a in m['device_assets'] if a['asset_id']==n['device_asset_id']),None)
   if not a:continue
   d=next(d for d in m['device_models'] if d['model_id']==a['model_id']);domains={p['domain'] for p in m['ports'] if p['node_id']==n['node_id']}
-  settings={};num=int(n['node_id'].split('_')[-1]) if n['node_id'].split('_')[-1].isdigit() else {'EMS_MASTER':1,'EMS_PV':2,'EMS_BESS':3}.get(n['node_id'],50)
-  values={'addressing_mode':'STATIC - proposed','ip_address':f'192.0.2.{20+num if n["node_type"]=="BESS" else 10 if n['node_id']=='NET_01' else num}','subnet_mask':'255.255.255.0','network_protocol':'Modbus TCP candidate; register map pending','station_address':str(num),'control_strategy':'Self-consumption with PCC zero-export; supervisory only','dispatch_priority':'Zero-export > site demand ceiling > self-consumption; pending manufacturer review','power_feedback_source':'METER_PCC at LV incomer; import positive; CT polarity unverified','command_authority':'SIMULATION_ONLY - no write permission','communication_loss_action':'Request safe power curtailment; timing and fallback pending manufacturer validation','export_limit':0,'grid_power_target':25,'pv_curtailment':'Via EMS_PV; when ESS cannot absorb surplus, curtail PV; pending proof','charge_power_limit':125,'discharge_power_limit':125,'battery_operating_mode':'GRID_CONNECTED; no islanding or backup assumed'}
+  settings={};num=int(n['node_id'].split('_')[-1]) if n['node_id'].split('_')[-1].isdigit() else {'EMS_MASTER':1}.get(n['node_id'],50)
+  values={'addressing_mode':'STATIC - proposed','ip_address':f'192.0.2.{20+num if n["node_type"]=="BESS" else 10 if n['node_id']=='NET_01' else num}','subnet_mask':'255.255.255.0','network_protocol':'Modbus TCP candidate; register map pending','station_address':str(num),'control_strategy':'Self-consumption with PCC zero-export; supervisory only','dispatch_priority':'Zero-export > site demand ceiling > self-consumption; pending manufacturer review','power_feedback_source':'METER_PCC at LV incomer; import positive; CT polarity unverified','command_authority':'SIMULATION_ONLY - no write permission','communication_loss_action':'Request safe power curtailment; timing and fallback pending manufacturer validation','export_limit':0,'grid_power_target':25,'pv_curtailment':'Via EMS_MASTER; when ESS cannot absorb surplus, curtail PV; pending proof','charge_power_limit':125,'discharge_power_limit':125,'battery_operating_mode':'GRID_CONNECTED; no islanding or backup assumed'}
   for item in catalog['parameters']:
    if item['node_types'] and n['node_type'] not in item['node_types']:continue
    if item['domains'] and not domains.intersection(item['domains']):continue

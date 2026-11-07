@@ -9,7 +9,7 @@ test('20-unit pilot persists, renders, flags real gaps, locates and generates bl
  await page.goto('/')
  await page.getByLabel('选择项目').selectOption(model.project.project_id)
  await expect(page.getByText('CI-20 规划样板 · 非现场实测',{exact:true})).toBeVisible()
- await expect(page.locator('.x6-node').filter({hasNot:page.locator('[data-reference="true"]')})).toHaveCount(75)
+ await expect(page.locator('.x6-node').filter({hasNot:page.locator('[data-reference="true"]')})).toHaveCount(73)
  await page.getByRole('button',{name:/L3 型号与资产/}).click()
  await expect(page.getByRole('button',{name:'打开设备 BESS 10 · 125kW/261.2kWh',exact:true})).toBeVisible()
  await page.getByRole('button',{name:/L5 系统设置/}).click()

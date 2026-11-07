@@ -1,6 +1,6 @@
 import type {Model,Node} from './types'
 export type Point={x:number;y:number}
-export type GroupDiagram={id:string;title:string;subtitle:string;model:Model;positions:Record<string,Point>;references:Set<string>;height:number}
+export type GroupDiagram={id:string;title:string;subtitle:string;model:Model;positions:Record<string,Point>;routes?:Record<string,Point[]>;references:Set<string>;height:number}
 const order=(a:Node,b:Node)=>a.node_id.localeCompare(b.node_id,undefined,{numeric:true})
 
 /** View-only partition from recorded electrical paths, never writes engineering relationships. */

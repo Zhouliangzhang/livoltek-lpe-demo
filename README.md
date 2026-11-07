@@ -146,7 +146,7 @@ L6 now lists missing information, setting conflicts and pending manufacturer con
 
 ### CI-20 realistic planning pilot
 
-`examples/ci20-pilot.json` contains 10 GT3-125K-1 inverters, 10 BES-P125X261E cabinets, a candidate three-controller iEMS hierarchy, PCC metering/CTs, four five-way AC collection boards, branch breakers, transformer/LV boundary and communication/control relationships. It has 75 nodes, 27 assets, 240 ports and 120 edges. Sources, assumptions, unimplemented engineering detail and walkthrough findings are documented in `docs/CI20_PILOT.md`.
+`examples/ci20-pilot.json` contains 10 GT3-125K-1 inverters, 10 BES-P125X261E cabinets, one iEMS controlling all 20 primary devices, as confirmed by the user, PCC metering/CTs, four five-way AC collection boards, branch breakers, transformer/LV boundary and communication/control relationships. It has 73 nodes, 25 assets, 228 ports and 114 edges. Sources, assumptions, unimplemented engineering detail and walkthrough findings are documented in `docs/CI20_PILOT.md`.
 
 Rebuild with `.venv/Scripts/python.exe scripts/build_ci20_pilot.py`. With the local service running, append `--install` to create this project through the API; existing projects are never silently overwritten. Select CI-20 in the project menu. Candidate planned settings are separate from missing field measurements. Two explicitly simulated power profiles balance the main and collection buses; these are ideal steady-state examples, not a zero-export dynamic model.
 
@@ -154,4 +154,8 @@ Validation: 29 backend tests and 15 frontend/browser tests, including project pe
 
 ### Grouped read-only topology
 
-CI-20 now shows main distribution, PV collection, BESS collection and communication/control in four independently zoomable diagrams. All 75 objects and 120 recorded connections are retained; dashed endpoint references do not create assets. Electrical branches follow their recorded collection boards. Telemetry refresh preserves zoom. See `docs/GROUPED_TOPOLOGY.md` and the `docs/ci20-grouped-*.png` actual-page screenshots.
+CI-20 now shows main distribution, PV collection, BESS collection and communication/control in four independently zoomable diagrams. All 73 objects and 114 recorded connections are retained; dashed endpoint references do not create assets. Electrical branches follow their recorded collection boards. Telemetry refresh preserves zoom. See `docs/GROUPED_TOPOLOGY.md` and the `docs/ci20-grouped-*.png` actual-page screenshots.
+
+### Single-iEMS communication views
+
+The user-confirmed single-controller architecture supersedes the earlier three-controller assumption. Communication/control is split into zero-export metering, unified iEMS control, PV RS485 and BESS Ethernet views, with a separate auxiliary supply panel. The 50 underlying relationships are drawn once each. Only zoom/fit is enabled. See `docs/SINGLE_IEMS_CONTROL.md` and `docs/ci20-control-*.png`. Validation: production build, 30 backend tests and 18 frontend/browser tests.
