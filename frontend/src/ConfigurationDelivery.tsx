@@ -1,0 +1,13 @@
+import {useEffect,useState} from 'react'
+import {api} from './types'
+export type Environment='SIMULATION'|'REAL'
+type Entry={id:string;action:string;status:string;revision:number;model_hash:string;created:string}
+export function ConfigurationDelivery({projectId,revision,dirty,environment}:{projectId:string;revision:number;dirty:boolean;environment:Environment}){
+ const [data,setData]=useState<{records:Entry[];model_hash:string}|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[mismatch,setMismatch]=useState(false)
+ async function refresh(){setData(await api(`/projects/${projectId}/iems-configuration`))}
+ useEffect(()=>{void refresh().catch(e=>setError(e.message))},[projectId,revision])
+ async function command(action:string){setBusy(true);setError('');try{await api(`/projects/${projectId}/iems-configuration`,{mode:environment,revision,action,mismatch});await refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ const last=data?.records[0],sent=data?.records.find(r=>r.action==='send'),current=last?.model_hash===data?.model_hash&&!dirty,real=environment==='REAL'
+ return <section className="configurationDelivery" aria-label="M1 配置下发与读回"><header><div><small>M1 / CONFIGURATION</small><h2>配置保存之后，还要确认生效。</h2><p>{real?'真实 iEMS 尚未连接。当前仅可编辑工程草案。':'使用独立模拟 iEMS 演练下发与读回，不修改真实设备。'}</p></div></header><div className="configurationStates"><div><small>01 工作台草案</small><strong>{dirty?'有未保存修改':'已保存 R'+revision}</strong></div><div><small>02 下发配置</small><strong>{real?'未下发':sent?'模拟下发 R'+sent.revision:'尚未下发'}</strong></div><div><small>03 iEMS 实际生效 / 读回</small><strong>{real?'未获取真实生效值':!current?'等待当前版本读回':last?.status==='MATCHED'?'模拟读回一致':last?.status==='MISMATCH'?'模拟读回不一致':'已下发，尚未读回'}</strong></div></div><div className="configurationActions"><button className="primary" disabled={busy||dirty||real} onClick={()=>void command('send')}>下发到{real?'真实':'模拟'} iEMS</button><button disabled={busy||dirty||real||!sent} onClick={()=>void command('readback')}>读取并比较生效配置</button>{!real&&<label><input type="checkbox" checked={mismatch} onChange={e=>setMismatch(e.target.checked)}/>演练读回差异</label>}</div>{dirty&&<p>请先保存 M1 版本，再下发配置。</p>}{error&&<p role="alert">{error}</p>}<small>模拟读回一致不代表现场生效；存在差异或配置变化时，M2 自动测试不会启动。</small></section>
+}
+export function WorkbenchHandover(){return <section className="configurationDelivery"><small>M3 / HANDOVER</small><h2>项目交接</h2><p>交接资料将围绕最终生效配置、真实 SAT 结果、遗留问题和权限移交归档。</p><div className="configurationStates"><div><small>生效配置</small><strong>等待真实 iEMS 读回</strong></div><div><small>SAT 结果</small><strong>模拟记录不作为交接依据</strong></div><div><small>交接确认</small><strong>待后续实现</strong></div></div><p>当前阶段不提供交接签署，不生成虚构的验收结论。</p></section>}

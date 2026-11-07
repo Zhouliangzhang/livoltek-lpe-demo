@@ -13,7 +13,7 @@ test('old guidance is read-only and does not compete with the three-step workflo
  await request.post('/api/projects',{data:{model:m,expected_revision:0}})
  await request.post(`/api/projects/${m.project.project_id}/plans`,{data:{}})
  await page.goto('/');await page.getByLabel('选择项目').selectOption(m.project.project_id)
- await page.getByRole('button',{name:'M3 调试与验证',exact:true}).click()
+ await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
  await page.getByText('旧版技术参考与现场记录 · 只读',{exact:true}).click()
  const legacy=page.locator('.m2Legacy').filter({has:page.getByText('旧版技术参考与现场记录 · 只读',{exact:true})})
  await expect(legacy.locator('article')).not.toHaveCount(0)

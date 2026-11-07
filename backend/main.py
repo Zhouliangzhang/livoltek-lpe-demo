@@ -12,6 +12,7 @@ from .domain import ROOT, SCHEMA, pilot, validate, digest, load
 from .store import Store, now
 from .sop import seed_templates, generate
 from .installation_tracking import register_tracking
+from .workbench import register_workbench
 from .commissioning import register_commissioning
 from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
@@ -65,6 +66,7 @@ def create_app(db_path=None):
     register_tracking(app,db)
     register_checklist(app,db)
     register_commissioning(app,db)
+    register_workbench(app,db)
 
     def project(id):
         try:

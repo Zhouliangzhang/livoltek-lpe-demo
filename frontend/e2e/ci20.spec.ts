@@ -17,7 +17,7 @@ test('20-unit pilot persists, renders, flags real gaps, locates and generates bl
  await page.getByLabel('L5 筛选设备').selectOption('EMS_MASTER')
  await expect(page.getByLabel('EMS_MASTER.export_limit planned',{exact:true})).toHaveValue('0')
  await expect(page.getByLabel('EMS_MASTER.grid_power_target planned',{exact:true})).toHaveValue('25')
- await page.getByRole('button',{name:'M3 调试与验证',exact:true}).click()
+ await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
  await expect(page.locator('.m3Steps')).toBeVisible()
  await expect(page.locator('.m3Steps button')).toHaveCount(5)
  await expect(page.locator('.m3Steps button')).toHaveCount(5)

@@ -15,6 +15,11 @@ class Result(BaseModel):
     observation:str=Field(default='',max_length=4000)
     reference:str=Field(default='',max_length=1500)
 
+class AutomaticRun(BaseModel):
+    edge_id:str
+    mode:Literal['SIMULATION','REAL']
+    failure_step:Literal['conditions','wiring','settings','identity','data'] | None=None
+
 def progress(records,edge,mode):
     result=[];parent=None;valid=True
     for step in STEPS:
@@ -47,7 +52,7 @@ def register_commissioning(app,db):
         values=body.model_dump()
         if body.mode=='SIMULATION':
             values.update(status='FAIL' if body.scenario=='failure' else 'PASS',recorder='模拟引擎',reference='M3-METER-1 / synthetic fixture',observation=(
-                '模拟故障：本步骤预期条件不满足；未连接现场设备。' if body.scenario=='failure' else {
+                {'conditions':'模拟故障 PRECONDITION_MISSING：演练现场执行条件缺失，测试未启动。','wiring':'模拟故障 PORT_MAPPING_MISMATCH：演练线序与端口映射不一致，请检查双方接线图。','settings':'模拟故障 ADDRESS_MISMATCH：演练电表地址与 iEMS 目标地址不一致，请核对通信配置。','identity':'模拟故障 METER_TIMEOUT：演练目标电表无响应，请核对供电、接线、地址与驱动。','data':'模拟故障 STALE_DATA：演练功率点数据过期，不能作为零馈控制反馈。'}[body.step] if body.scenario=='failure' else {
                 'conditions':'模拟现场许可与适用文件齐备。仅用于演练流程。',
                 'wiring':'模拟两端端口和线序与演练图纸一致。',
                 'settings':'模拟地址匹配，双方通信参数兼容；不使用或覆盖 M1 待确认值。',
@@ -60,3 +65,20 @@ def register_commissioning(app,db):
                 if body.step!='conditions':raise HTTPException(422,'尚未接入受控厂家判据，现场功能不能判为通过')
                 if not body.reference.strip():raise HTTPException(422,'请提供 EPC 现场执行条件确认记录')
         return db.add('commissioning',id,{**values,'version':'M3-METER-1','predecessor_id':state[idx-1]['record']['id'] if idx else None,'source':'SYNTHETIC' if body.mode=='SIMULATION' else 'MANUAL_FIELD_EVIDENCE'})
+
+    @app.post('/api/plans/{id}/commissioning/auto')
+    def automatic(id:str,body:AutomaticRun):
+        if body.mode=='REAL':raise HTTPException(503,'真实 iEMS 测试接口未接入，未执行任何现场测试')
+        p,model,edges=context(id)
+        configs=db.records('iems_configuration',p['project'])
+        current=configs[0] if configs else None
+        if not current or current['action']!='readback' or current['status']!='MATCHED' or current['model_hash']!=p['engineering_hash']:
+            raise HTTPException(409,'请先在 M1 完成当前配置的模拟下发与读回一致性核对')
+        results=[]
+        for step in STEPS:
+            result=save(id,Result(edge_id=body.edge_id,mode='SIMULATION',step=step,scenario='failure' if body.failure_step==step else 'normal'))
+            results.append(result)
+            if result['status']!='PASS':break
+        completed=len(results)==len(STEPS) and results[-1]['status']=='PASS'
+        run=db.add('commissioning_run',id,{'source':'SIMULATOR','configuration_id':current['id'],'edge_id':body.edge_id,'result_ids':[r['id'] for r in results],'completed':completed})
+        return {'run_id':run['id'],'source':'SIMULATOR','configuration_id':current['id'],'results':results,'completed':completed}

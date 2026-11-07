@@ -7,7 +7,7 @@ test('M2 automatically creates once, prompts on model changes, preserves old evi
  let fail=true
  await page.route('**/api/projects/*/plans',async route=>{if(route.request().method()==='POST'&&fail){fail=false;await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({detail:'测试临时故障'})})}else await route.continue()})
  await page.goto('/');await page.getByLabel('选择项目').selectOption(model.project.project_id)
- await page.getByRole('button',{name:'M3 调试与验证',exact:true}).click()
+ await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
  await expect(page.getByRole('alert')).toContainText('测试临时故障')
  await page.getByRole('button',{name:'重试',exact:true}).click()
  await expect(page.locator('.m3Steps button')).toHaveCount(5)
@@ -18,12 +18,12 @@ test('M2 automatically creates once, prompts on model changes, preserves old evi
  const plans=await (await request.get(`/api/projects/${model.project.project_id}/plans`)).json();expect(plans).toHaveLength(1)
  const old=plans[0],checks=await (await request.get(`/api/plans/${old.id}/checklist`)).json()
  await request.post(`/api/plans/${old.id}/checklist`,{data:{item_id:checks.items[0].id,status:'PENDING',recorder:'测试',note:'原始记录保留',photo_ids:[]}})
- await page.reload();await page.getByRole('button',{name:'M3 调试与验证',exact:true}).click()
+ await page.reload();await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
  await expect(page.locator('.m3Steps')).toBeVisible()
  expect(await (await request.get(`/api/projects/${model.project.project_id}/plans`)).json()).toHaveLength(1)
  model.nodes[0].name+=' · 已核对'
  expect((await request.post('/api/projects',{data:{model,expected_revision:1}})).ok()).toBeTruthy()
- await page.reload();await page.getByRole('button',{name:'M3 调试与验证',exact:true}).click()
+ await page.reload();await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
  await expect(page.locator('.m2ProjectContext')).toContainText('模型已变化')
  await expect(page.getByRole('button',{name:'更新调试依据',exact:true})).toBeVisible()
  expect(await (await request.get(`/api/projects/${model.project.project_id}/plans`)).json()).toHaveLength(1)
