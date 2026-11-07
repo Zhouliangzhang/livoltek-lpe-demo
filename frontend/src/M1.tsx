@@ -7,7 +7,7 @@ import {stageRequirements,requirementsBefore,stageOrder} from './stageRequiremen
 import {readinessIssues} from './readinessIssues'
 import {groupReadinessIssues} from './readinessGroups'
 import type {Issue} from './readinessIssues'
-import {ConnectionEditor} from './ConnectionEditor'
+import {ConnectionEditor,sourcePorts} from './ConnectionEditor'
 import {projectFramework,completionEvidence,templateVersion} from './projectTopology'
 
 type Props={model:Model;change:(m:Model)=>void;selected:string;select:(id:string)=>void;flows:Record<string,Flow>;review:()=>void;reviews:Review[];revision:number;scenario:string;setScenario:(s:string)=>void;saveConnection:(model:Model)=>Promise<void>;enterInstallation:()=>void;navigationRequest:number}
@@ -27,7 +27,7 @@ export function M1({model,change,selected,select,flows,review,reviews,revision,s
  function go(next:string){if(requirementsBefore(model,next).length){setNextTarget(next);return}setNextTarget(null);setIssueTarget(null);if(next==='M2')enterInstallation();else setStage(next)}
  useEffect(()=>{if(navigationRequest)setNextTarget('M2')},[navigationRequest])
  const [issueTarget,setIssueTarget]=useState<Issue|null>(null)
- function locateIssue(issue:Issue){if(issue.layer==='L6'){select(model.project.project_id);review();return}setIssueTarget({...issue});setStage(issue.layer==='L1'?'L2':issue.layer);setBottom('规则与评审');setSearch('');const linkedEdge=model.edges.find(e=>e.edge_id===issue.rowId);if(linkedEdge)setLayer(linkedEdge.edge_type);if(issue.nodeId)select(issue.nodeId)}
+ function locateIssue(issue:Issue){if(issue.layer==='L6'){select(model.project.project_id);review();return}setIssueTarget({...issue});setStage(issue.layer==='L1'?'L2':issue.layer);setBottom('规则与评审');setSearch('');const linkedEdge=model.edges.find(e=>e.edge_id===issue.rowId);if(linkedEdge)setLayer(linkedEdge.edge_type);else if(issue.layer==='L4'&&issue.nodeId&&!sourcePorts(model,issue.nodeId,layer).length){const compatible=kinds.find(k=>sourcePorts(model,issue.nodeId!,k).length);if(compatible)setLayer(compatible)}if(issue.nodeId)select(issue.nodeId)}
  useEffect(()=>{
   if(!issueTarget)return
   if(issueTarget.layer==='L3'&&issueTarget.nodeId){setDetailId(issueTarget.nodeId);setPanel('型号与资产')}

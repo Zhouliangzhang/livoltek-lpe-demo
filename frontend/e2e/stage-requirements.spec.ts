@@ -36,3 +36,20 @@ test('forward prompts locate missing fields; no L6 or shortcut bypass',async({pa
  await page.getByRole('button',{name:'继续下一环节',exact:true}).click()
  await expect(page.getByRole('heading',{name:'安装检查工作包',exact:true})).toBeVisible()
 })
+
+
+test('L4 disconnected device prompt opens its device-first connection editor',async({page,request})=>{
+ const m=structuredClone(fixture);m.project.project_id+='-DISCONNECTED';m.parameters.forEach(p=>{if(p.scope==='PROJECT')p.owner_id=m.project.project_id})
+ const original=m.nodes.find(n=>n.node_id==='BESS_10')!,asset=m.device_assets.find(a=>a.asset_id===original.device_asset_id)!
+ m.nodes.push({...structuredClone(original),node_id:'BESS_11',logical_id:'BESS_11',name:'Test disconnected BESS',device_asset_id:'ASSET-BESS_11'})
+ m.device_assets.push({...structuredClone(asset),asset_id:'ASSET-BESS_11'})
+ const port=m.ports.find(p=>p.node_id==='BESS_10'&&p.domain==='ETHERNET')!
+ m.ports.push({...structuredClone(port),port_id:'BESS_11.LAN',node_id:'BESS_11'})
+ expect((await request.post('/api/projects',{data:{model:m,expected_revision:0}})).ok()).toBeTruthy()
+ await page.goto('/');await page.getByLabel('选择项目').selectOption(m.project.project_id)
+ await page.getByRole('button',{name:/L5 系统设置/}).click()
+ await page.getByRole('button',{name:'补充 BESS_11-connection',exact:true}).click()
+ await expect(page.getByRole('region',{name:'L4 作业区',exact:true})).toBeVisible()
+ await expect(page.getByLabel('起点设备',{exact:true})).toHaveValue('BESS_11')
+ await expect(page.getByLabel('起点端口',{exact:true})).toHaveValue('BESS_11.LAN')
+})
