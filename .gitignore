@@ -10,3 +10,6 @@ test-results/
 .env.*
 !.env.example
 *.log
+.npm-cache/
+.test-tmp/
+.playwright/
