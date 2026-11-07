@@ -48,7 +48,7 @@ export function completionEvidence(model:Model,reviews:Review[],revision:number)
   ['L2','电气结构',`${structures.filter(x=>x.node).length}/${structures.length} 类模板结构已录入`],
   ['L3','设备身份',`${identified.length}/${model.device_assets.length} 台具备 SN 与型号版本`],
   ['L4','端口连接',`${validEdges.length} 条端口关系已录入 · 待工程核对`],
-  ['L5','配置参数',`${parameters.filter(p=>p.planned&&p.actual&&p.approved).length}/${parameters.length} 项三值齐备`],
-  ['L6','工程评审',`${currentReviews.length} 条当前版本评审 · ${model.baseline.status}`],
+  ['L5','系统设置',`${parameters.filter(p=>p.planned&&p.actual).length}/${parameters.length} 项计划与现场值已记录`],
+  ['L6','运行条件检查',`${currentReviews.length} 条技术意见 · ${model.baseline.status} · 待现场验证`],
  ]
 }

@@ -1,0 +1,23 @@
+import {test,expect} from '@playwright/test'
+
+test('system settings persist and invalidate prior operating-condition checks',async({page})=>{
+ await page.goto('/')
+ await page.getByRole('button',{name:'复制为新项目'}).click()
+ await expect(page.locator('.projectBar strong')).toHaveText('LV-01 新建样板')
+ await page.getByRole('button',{name:/L6 运行条件检查/}).click()
+ await page.getByRole('button',{name:'运行数据规则检查',exact:true}).click()
+ await expect(page.getByText('系统运行结论：待现场验证。静态资料检查不能确认接线实况、保护动作、通信质量或带载运行结果。')).toBeVisible()
+ await page.getByRole('button',{name:/L5 系统设置/}).click()
+ await page.getByLabel('nominal_ac_voltage actual',{exact:true}).fill('400')
+ await page.getByRole('button',{name:/L6 运行条件检查/}).click()
+ await expect(page.getByText('尚未检查。运行检查后查看 L1–L5 的缺项、冲突和需现场验证事项。')).toBeVisible()
+ await page.getByRole('button',{name:'保存版本',exact:true}).click()
+ await expect(page.getByRole('status')).toContainText('已保存不可变版本')
+ await page.reload()
+ await page.getByRole('button',{name:/L5 系统设置/}).click()
+ await expect(page.getByLabel('nominal_ac_voltage actual',{exact:true})).toHaveValue('400')
+ await page.getByRole('button',{name:/L6 运行条件检查/}).click()
+ await page.getByRole('button',{name:'运行数据规则检查',exact:true}).click()
+ await expect(page.getByText('资料或设置尚待补全',{exact:true})).toBeVisible()
+ await expect(page.getByText('待现场验证',{exact:true})).toBeVisible()
+})

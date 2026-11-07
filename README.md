@@ -125,3 +125,9 @@ L4 now starts with source device/structure, source port, target device/structure
 Save Connection validates through the existing project-save endpoint and persists a new optimistic-concurrency-checked engineering revision, including other current project changes (stated beside the action). On success the returned model refreshes the connection table and generated read-only topology. Failure keeps the form and shows the server error. Connections remain DRAFT; compatibility checks do not constitute engineering approval.
 
 Validated: production build and seven tests, including automatic single-port selection, multi-port choice, incompatible endpoints, control direction, duplicate/voltage filtering, immediate topology update and reload persistence.
+
+### System settings and operating-condition review
+
+See `docs/PRODUCT_SCOPE.md` for the clarified product definition. L5 now records existing numeric planned/site system settings and preserves approved reference values read-only. L6 checks the L1-L5 input conditions and exposes missing data, discrepancies and on-site verification requirements; it does not certify normal operation. Technical collaboration is labelled separately from formal EPC engineering approval, legal inspection and acceptance. Changes invalidate prior displayed check results.
+
+Validated: production build and eight tests, including setting persistence and invalidation of prior L6 checks. Manufacturer-specific complete setting catalogues and field-operation verification are not implemented by this stage.
