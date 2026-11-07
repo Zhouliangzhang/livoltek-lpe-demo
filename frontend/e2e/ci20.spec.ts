@@ -13,6 +13,7 @@ test('20-unit pilot persists, renders, flags real gaps, locates and generates bl
  await page.getByRole('button',{name:/L3 型号与资产/}).click()
  await expect(page.getByRole('button',{name:'打开设备 BESS 10 · 125kW/261.2kWh',exact:true})).toBeVisible()
  await page.getByRole('button',{name:/L5 系统设置/}).click()
+ await page.getByText('高级设置：通信、逐台参数、现场值与厂家依据',{exact:true}).click()
  await page.getByLabel('L5 筛选设备').selectOption('EMS_MASTER')
  await expect(page.getByLabel('EMS_MASTER.export_limit planned',{exact:true})).toHaveValue('0')
  await expect(page.getByLabel('EMS_MASTER.grid_power_target planned',{exact:true})).toHaveValue('25')

@@ -1034,7 +1034,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1129,7 +1137,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1224,7 +1240,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1319,7 +1343,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1414,7 +1446,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1546,7 +1586,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1641,7 +1689,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1736,7 +1792,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1831,7 +1895,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -1926,7 +1998,15 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "battery_operating_mode": {
-            "planned": "GRID_CONNECTED; no islanding or backup assumed",
+            "planned": "自发自用：余电充电、缺电放电；受 SOC 及功率上限约束",
+            "actual": null,
+            "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
+            "model_id": "BESS-261",
+            "master_data_version": "BESS-DS-2025-10V1",
+            "template_version": "L5-CHECKLIST-1"
+          },
+          "charge_schedule": {
+            "planned": "优先光伏余电充电；暂不启用电网定时充电",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "BESS-261",
@@ -2014,7 +2094,7 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "control_strategy": {
-            "planned": "Self-consumption with PCC zero-export; supervisory only",
+            "planned": "自发自用；PCC 零馈优先",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "EMS-USER20",
@@ -2070,7 +2150,7 @@
             "template_version": "L5-CHECKLIST-1"
           },
           "pv_curtailment": {
-            "planned": "Via EMS_MASTER; when ESS cannot absorb surplus, curtail PV; pending proof",
+            "planned": "先供负载 → 余电充储能 → 剩余光伏限发",
             "actual": null,
             "reference_doc": "CI20-ASSUMPTIONS-R1; candidate, not approved",
             "model_id": "EMS-USER20",
