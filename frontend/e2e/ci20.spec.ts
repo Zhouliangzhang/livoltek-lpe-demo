@@ -18,7 +18,7 @@ test('20-unit pilot persists, renders, flags real gaps, locates and generates bl
  await expect(page.getByLabel('EMS_MASTER.export_limit planned',{exact:true})).toHaveValue('0')
  await expect(page.getByLabel('EMS_MASTER.grid_power_target planned',{exact:true})).toHaveValue('25')
  await page.getByRole('button',{name:'02 引导式安装',exact:true}).click()
- await page.getByRole('button',{name:'生成点检清单',exact:true}).click()
+ await expect(page.locator('.m2Steps')).toBeVisible()
  await expect(page.locator('.m2Steps button')).toHaveCount(3)
  await expect(page.locator('.m2Topic')).toHaveCount(4)
  const findings=readinessIssues(model as unknown as Model)

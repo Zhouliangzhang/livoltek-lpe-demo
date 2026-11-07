@@ -13,7 +13,7 @@ test('communication guide shows ports, settings and verification, then locates L
  const model=structuredClone(fixture);model.project.project_id+='-GUIDE';model.parameters.forEach(p=>{if(p.scope==='PROJECT')p.owner_id=model.project.project_id})
  await request.post('/api/projects',{data:{model,expected_revision:0}})
  await page.goto('/');await page.getByLabel('选择项目').selectOption(model.project.project_id)
- await page.getByRole('button',{name:'02 引导式安装',exact:true}).click();await page.getByRole('button',{name:'生成点检清单',exact:true}).click()
+ await page.getByRole('button',{name:'02 引导式安装',exact:true}).click();await expect(page.locator('.m2Steps')).toBeVisible()
  await page.getByText('辅助参考 · 系统通信接线总图',{exact:true}).click()
  const meter=page.getByRole('article',{name:'零馈计量 接线指引',exact:true})
  await expect(page.locator('.wireSelectedDetail')).toHaveCount(0)

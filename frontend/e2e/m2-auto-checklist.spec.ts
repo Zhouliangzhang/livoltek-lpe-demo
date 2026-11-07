@@ -1,0 +1,36 @@
+import {test,expect} from '@playwright/test'
+import fixture from '../../examples/ci20-pilot.json' with {type:'json'}
+
+test('M2 automatically creates once, prompts on model changes, preserves old evidence and retries failures',async({page,request})=>{
+ const model=structuredClone(fixture);model.project.project_id+='-AUTO';model.parameters.forEach(p=>{if(p.scope==='PROJECT')p.owner_id=model.project.project_id})
+ await request.post('/api/projects',{data:{model,expected_revision:0}})
+ let fail=true
+ await page.route('**/api/projects/*/plans',async route=>{if(route.request().method()==='POST'&&fail){fail=false;await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({detail:'测试临时故障'})})}else await route.continue()})
+ await page.goto('/');await page.getByLabel('选择项目').selectOption(model.project.project_id)
+ await page.getByRole('button',{name:'02 引导式安装',exact:true}).click()
+ await expect(page.getByRole('alert')).toContainText('测试临时故障')
+ await page.getByRole('button',{name:'重试',exact:true}).click()
+ await expect(page.locator('.m2Steps button')).toHaveCount(3)
+ await expect(page.locator('.m2ProjectContext')).toContainText('与当前模型一致')
+ await expect(page.getByRole('button',{name:'生成点检清单',exact:true})).toHaveCount(0)
+ await expect(page.getByRole('button',{name:'复制为新项目',exact:true})).toHaveCount(0)
+ await expect(page.locator('.m2Heading')).toHaveCount(0)
+ const plans=await (await request.get(`/api/projects/${model.project.project_id}/plans`)).json();expect(plans).toHaveLength(1)
+ const old=plans[0],checks=await (await request.get(`/api/plans/${old.id}/checklist`)).json()
+ await request.post(`/api/plans/${old.id}/checklist`,{data:{item_id:checks.items[0].id,status:'PENDING',recorder:'测试',note:'原始记录保留',photo_ids:[]}})
+ await page.reload();await page.getByRole('button',{name:'02 引导式安装',exact:true}).click()
+ await expect(page.locator('.m2Steps')).toBeVisible()
+ expect(await (await request.get(`/api/projects/${model.project.project_id}/plans`)).json()).toHaveLength(1)
+ model.nodes[0].name+=' · 已核对'
+ expect((await request.post('/api/projects',{data:{model,expected_revision:1}})).ok()).toBeTruthy()
+ await page.reload();await page.getByRole('button',{name:'02 引导式安装',exact:true}).click()
+ await expect(page.locator('.m2ProjectContext')).toContainText('模型已变化')
+ await expect(page.getByRole('button',{name:'更新点检依据',exact:true})).toBeVisible()
+ expect(await (await request.get(`/api/projects/${model.project.project_id}/plans`)).json()).toHaveLength(1)
+ await page.getByRole('button',{name:'更新点检依据',exact:true}).click()
+ await expect(page.locator('.m2ProjectContext')).toContainText('M1 R2')
+ await expect(page.locator('.m2ProjectContext')).toContainText('与当前模型一致')
+ const updated=await (await request.get(`/api/projects/${model.project.project_id}/plans`)).json();expect(updated).toHaveLength(2)
+ expect((await (await request.get(`/api/plans/${old.id}/checklist`)).json()).records[0].note).toBe('原始记录保留')
+ expect((await (await request.get(`/api/plans/${updated[0].id}/checklist`)).json()).records).toHaveLength(0)
+})
