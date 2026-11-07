@@ -31,7 +31,7 @@ test('system checklist: sequence, per-circuit feedback, evidence gate, persisten
  await expect(page.getByRole('heading',{name:'从设备建立端口连接',exact:true})).toBeVisible()
  await page.getByRole('button',{name:'02 引导式安装',exact:true}).click()
  await root.getByRole('button',{name:/03.*控制点检/}).click()
- await expect(root.locator('.checkRow')).toHaveCount(6)
+ await expect(root.locator('.checkRow')).toHaveCount(5)
  await root.locator('.checkRow').first().click()
  await expect(root).toContainText('不发送控制命令')
 })
