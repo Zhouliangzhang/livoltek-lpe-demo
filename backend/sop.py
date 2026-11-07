@@ -40,6 +40,12 @@ def generate(model, revision, templates):
         r = t['rule']
         if t['status'] == 'REJECTED' or not matches(r, model):
             continue
+        if t['scope_type'] == 'LIVOLTEK_DEVICE':
+            assets = {a['asset_id']:a for a in model['device_assets']}
+            if not any(n['node_type'] == r['when'].get('node_type_present') and
+                       assets.get(n['device_asset_id'],{}).get('equipment_origin') == 'LIVOLTEK'
+                       for n in model['nodes']):
+                continue
         missing = []
         for name in r['when'].get('required_parameter_names', []):
             if not any(p['name'] == name and p.get('approved') and p.get('reference_doc') for p in model['parameters']):
@@ -68,6 +74,15 @@ def generate(model, revision, templates):
                       'work_package':'WP04', 'risk':'MEDIUM', 'depends_on':[],
                       'evidence_requirements':['vendor_document','interface_map'], 'missing_inputs':missing,
                       'readiness':'BLOCKED' if missing else 'DRAFT_ONLY'})
+    for n in model['nodes']:
+        if n['node_type'] not in ('LOAD','PCC'):
+            continue
+        tasks.append({'task_id':'BOUNDARY-'+n['node_id'], 'title':'外部系统边界核对 · '+n['name'],
+                      'instructions':'依据 EPC 设计核对边界连接点、额定参数及必要测量信息；边界节点不要求设备 SN。',
+                      'scope_type':'EPC_DOCUMENT_CHECK', 'task_owner':'EPC', 'execution_authority':'SIMULATION_ONLY',
+                      'template_id':'BOUNDARY-REVIEW', 'template_version':1, 'work_package':'WP01', 'risk':'LOW',
+                      'depends_on':[], 'evidence_requirements':['design_reference','boundary_observation'],
+                      'missing_inputs':['approved EPC boundary documentation'], 'readiness':'BLOCKED'})
     ordered, remaining = [], tasks[:]
     ids = {t['task_id'] for t in tasks}
     for t in tasks:

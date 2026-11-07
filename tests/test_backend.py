@@ -91,3 +91,37 @@ def test_reviews(client):
     assert len(client.get(f'/api/projects/{PID}/reviews').json())==1
     r['target_id']='absent'
     assert client.post(f'/api/projects/{PID}/reviews',json=r).status_code==422
+
+def test_third_party_bess_never_gets_manufacturer_internal_task():
+    m=pilot()
+    m['device_assets'][0]['equipment_origin']='THIRD_PARTY'
+    p=generate(m,1,seed_templates())
+    assert not any(t['task_id']=='RULE-BESS-PREP' for t in p['tasks'])
+    assert any(t['task_id']=='INTERFACE-ASSET_BESS_01' for t in p['tasks'])
+    assert any(t['task_id']=='BOUNDARY-LOAD_01' for t in p['tasks'])
+
+def test_simulated_pass_requires_evidence_and_retains_failure(client):
+    t=next(x for x in client.get('/api/templates').json() if 'BESS' in x['template_id'])
+    b={'expected_version':1,'title':t['title'],'instructions':t['instructions'],'source_document_ref':'DEMO-REF', 'status':'APPROVED','reviewer':'Reviewer','reason':'test'}
+    client.post('/api/templates/'+t['template_id'],json=b)
+    plan=client.post(f'/api/projects/{PID}/plans').json()
+    task=next(t for t in plan['tasks'] if t['task_id']=='RULE-BESS-PREP')
+    assert task['readiness']=='DRAFT_ONLY'
+    data={'task_id':task['task_id'],'result':'PASS','reviewer':'EPC','note':'simulation','evidence':{}}
+    url=f'/api/plans/{plan["id"]}/evidence'
+    assert client.post(url,json=data).status_code==422
+    data['result']='FAIL'
+    assert client.post(url,json=data).status_code==200
+    data['result']='PASS';data['evidence']={k:'DEMO evidence ref' for k in task['evidence_requirements']}
+    assert client.post(url,json=data).status_code==200
+    assert [e['result'] for e in client.get(url).json()]==['PASS','FAIL']
+
+def test_rule_edit_is_schema_validated(client):
+    t=client.get('/api/templates').json()[0]
+    b={'expected_version':t['version'],'title':t['title'],'instructions':t['instructions'],'status':'DRAFT','reviewer':'EPC','reason':'test','rule':{'bad':'rule'}}
+    assert client.post('/api/templates/'+t['template_id'],json=b).status_code==422
+
+def test_dependency_cycle_is_rejected():
+    ts=seed_templates();ts[0]['rule']['depends_on']=['RULE-METER-COMM']
+    with pytest.raises(ValueError,match='cycle'):
+        generate(pilot(),1,ts)

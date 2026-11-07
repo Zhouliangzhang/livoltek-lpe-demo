@@ -7,7 +7,8 @@ from typing import Any, Literal
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-from .domain import ROOT, SCHEMA, pilot, validate, digest
+from jsonschema import Draft202012Validator
+from .domain import ROOT, SCHEMA, pilot, validate, digest, load
 from .store import Store, now
 from .sop import seed_templates, generate
 
@@ -30,6 +31,7 @@ class TemplateEdit(BaseModel):
     status: Literal['DRAFT','UNDER_REVIEW','APPROVED','REJECTED']
     reviewer: str = Field(min_length=1)
     reason: str = Field(min_length=1)
+    rule: dict[str, Any] | None = None
 
 class Evidence(BaseModel):
     task_id: str
@@ -133,8 +135,17 @@ def create_app(db_path=None):
             raise HTTPException(409,'Template version conflict')
         if body.status == 'APPROVED' and not body.source_document_ref:
             raise HTTPException(422,'Approval requires a source reference; this remains demo-only')
+        if body.rule is not None:
+            rule_schema = load('sop-rule-pack.schema.json')['properties']['rules']['items']
+            errors = [e.message for e in Draft202012Validator(rule_schema).iter_errors(body.rule)]
+            if errors:
+                raise HTTPException(422,errors)
+            if body.rule['rule_id'] != old['rule']['rule_id'] or body.rule['sop_template_id'] != id:
+                raise HTTPException(422,'Stable rule/template IDs cannot change')
         new = {k:v for k,v in old.items() if k not in ('id','kind','created','project')}
-        new.update(body.model_dump(exclude={'expected_version'}), version=old['version']+1)
+        new.update(body.model_dump(exclude={'expected_version','rule'}), version=old['version']+1)
+        if body.rule is not None:
+            new['rule'] = body.rule
         return db.add('template','catalog',new)
 
     @app.post('/api/projects/{id}/plans')

@@ -1,6 +1,7 @@
 # M1 + M2 implementation and acceptance plan
 
 Goal: operational LV-01 engineering prototype using the recovered original baselines.
+Status (2026-11-07): stages 1–4 implemented and validated for the LV-01 pilot; see VALIDATION.md for evidence and remaining production/product scope.
 Architecture: React/TypeScript/X6 renders a schema-backed engineering model; FastAPI validates domain data and SQLite stores immutable revisions, plans, templates and reviews. View positions stay separate from engineering facts. No real-device endpoints or production release are implemented.
 
 1. Preserve the 15 original baseline files; validate both original samples and rule pack. Implement schema plus semantic validation, optimistic revision persistence and immutable history. Test invalid references, domains, duplicate IDs/SNs, authorization and conflicts.

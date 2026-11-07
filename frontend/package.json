@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.12" },
+  "engines": {
+    "node": ">=22.12"
+  },
   "dependencies": {
     "@antv/x6": "^2.18.1",
     "react": "^19.0.0",
@@ -16,5 +18,10 @@
     "typescript": "^5.7.3",
     "vite": "^6.1.0",
     "@playwright/test": "^1.50.1"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test:e2e": "playwright test"
   }
 }

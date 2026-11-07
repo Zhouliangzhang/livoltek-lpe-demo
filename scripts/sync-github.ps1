@@ -18,4 +18,6 @@ if ($LASTEXITCODE -eq 0) {
 if ($LASTEXITCODE -ne 0) { throw 'GitHub sync failed. Local work is preserved.' }
 git show-ref --verify --quiet refs/heads/develop
 if ($LASTEXITCODE -ne 0) { git branch develop }
+git push -u origin develop
+if ($LASTEXITCODE -ne 0) { throw 'Develop branch sync failed.' }
 Write-Host 'Remote sync completed. Use git switch develop for development.'
