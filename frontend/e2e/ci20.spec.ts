@@ -21,6 +21,7 @@ test('20-unit pilot persists, renders, flags real gaps, locates and generates bl
  await page.getByRole('button',{name:'运行数据规则检查',exact:true}).click()
  await expect(page.locator('.issueSummary')).toBeVisible()
  await page.getByLabel('检查层级').selectOption('L3')
+ await page.getByTestId('issue-BESS_01-firmware_version').getByText('展开 10 个定位入口',{exact:true}).click()
  await page.getByRole('button',{name:'定位 BESS_10-firmware_version',exact:true}).click()
  await expect(page.getByLabel('现场固件版本',{exact:true})).toBeFocused()
  await expect(page.getByLabel('现场固件版本',{exact:true})).toHaveValue('')
