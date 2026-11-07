@@ -99,3 +99,11 @@ The top project layout is retained. The former three-column editor and standalon
 - Topology geometry is automatically derived from the recorded electrical graph, rooted at PCC objects. Objects without a recorded electrical path are displayed separately. It does not infer or invent connections.
 - The X6 canvas has no mutation callbacks, selection editing, node dragging, port dragging or panning. Only zooming/fit-to-view is enabled. Zoom does not dirty the engineering model. Existing saved manual layout coordinates are ignored by this view.
 - Browser regression checks cover a failed node-drag attempt leaving geometry unchanged, zoom changing the viewport without enabling Save, both intake workflows, SN rejection, connection validation, persistence and M2 regression.
+
+### On-demand asset details and intake ownership
+
+Device details are hidden by default and after adding an asset. Clicking a device name, row, or View/Supplement opens that device's details; Close Details hides them again. Switching layers or projects resets the detail view.
+
+LIVOLTEK identity/master data is read-only in the UI: manufacturer/model, scanned SN, catalogue document and port template. Users supplement the site label, installed location, observed firmware and structure assignment. Scan intake still uses the explicitly marked demo catalogue; live manufacturer lookup and camera decoding remain unconnected. Third-party manufacturer/model/document and SN can be manually entered or corrected; corrections remain unverified and copy shared model records before changing them.
+
+Validated via production build and both browser workflows: default-hidden details, opening/closing, scanner-owned read-only fields, editable third-party data, persistence, domain validation and the existing read-only topology/M2 regressions.
