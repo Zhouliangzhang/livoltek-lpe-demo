@@ -16,6 +16,7 @@ test('LV-01 editing, persistence, telemetry, SOP review and generation',async({p
  await expect(page.getByLabel('设备名称',{exact:true})).toHaveValue('BESS Browser Test')
  const node=page.getByTestId('topology-canvas').locator('.x6-node').filter({hasText:'BESS Browser Test'})
  await expect(node).toBeVisible()
+ await node.scrollIntoViewIfNeeded()
  const box=await node.boundingBox();if(!box)throw new Error('No graph node')
  await page.mouse.move(box.x+65,box.y+30);await page.mouse.down();await page.mouse.move(box.x+90,box.y+55,{steps:8});await page.mouse.up()
  await expect(page.getByRole('button',{name:'保存版本',exact:true})).toBeEnabled()

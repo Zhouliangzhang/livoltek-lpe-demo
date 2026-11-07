@@ -22,7 +22,7 @@ test('equipment catalogue and typed port connections',async({page})=>{
  await expect(page.getByRole('status')).toContainText('已添加连接')
  await page.getByRole('button',{name:'保存版本',exact:true}).click()
  await expect(page.getByRole('status')).toContainText('已保存不可变版本')
- await page.getByRole('button',{name:'02引导式安装'}).click()
+ await page.getByRole('button',{name:/引导式安装/}).click()
  await page.getByRole('button',{name:'生成安装计划'}).click()
  await expect(page.getByText(/第三方接口资料核对 · ASSET_/).last()).toBeVisible()
 })
