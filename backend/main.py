@@ -221,10 +221,15 @@ def create_app(db_path=None):
         p = project(id)
         timestamp = time.time() - (120 if scenario == 'stale' else 0)
         flows = {}
+        edges = {e['edge_id']: e for e in p['model']['edges']}
         for b in p['model']['telemetry_bindings']:
             if b['target_type'] != 'EDGE' or b['measurement'] != 'ACTIVE_POWER':
                 continue
             value = None if scenario == 'missing' else (-1 if scenario == 'reverse' else 1)*(24+round(4*math.sin(time.time()/8),1))
+            if b.get('point_ref', '').startswith('SIM.CI20.'):
+                profile = edges.get(b['target_id'], {}).get('attributes', {}).get('simulation_profile', {})
+                candidate = profile.get('reverse' if scenario == 'reverse' else 'normal')
+                value = candidate if scenario != 'missing' and type(candidate) in (int, float) and math.isfinite(candidate) else None
             flows[b['target_id']] = flow_state(value,'BAD' if scenario == 'bad' else 'GOOD',timestamp,b['max_age_seconds'],b['positive_direction'])
         return {'mode':'SIMULATION','generated_at':now(),'flows':flows}
 

@@ -143,3 +143,11 @@ Validated: production build, 27 backend tests and 11 frontend/browser suite test
 ### L6 actionable operating-condition data review
 
 L6 now lists missing information, setting conflicts and pending manufacturer confirmation with layer filters and links to the affected project/device/setting/connection. Modifications invalidate the previous check. Connection correction keeps existing edge identity; editing values or references never certifies manufacturer applicability. The result always separates static data checks from on-site operating verification. See `docs/L6_READINESS.md` for coverage, navigation and validation boundaries.
+
+### CI-20 realistic planning pilot
+
+`examples/ci20-pilot.json` contains 10 GT3-125K-1 inverters, 10 BES-P125X261E cabinets, a candidate three-controller iEMS hierarchy, PCC metering/CTs, four five-way AC collection boards, branch breakers, transformer/LV boundary and communication/control relationships. It has 75 nodes, 27 assets, 240 ports and 120 edges. Sources, assumptions, unimplemented engineering detail and walkthrough findings are documented in `docs/CI20_PILOT.md`.
+
+Rebuild with `.venv/Scripts/python.exe scripts/build_ci20_pilot.py`. With the local service running, append `--install` to create this project through the API; existing projects are never silently overwritten. Select CI-20 in the project menu. Candidate planned settings are separate from missing field measurements. Two explicitly simulated power profiles balance the main and collection buses; these are ideal steady-state examples, not a zero-export dynamic model.
+
+Validation: 29 backend tests and 15 frontend/browser tests, including project persistence, all 20 primary devices, L5/L6 navigation, M2 blocked guidance, power balance and stale telemetry. Existing browser tests now explicitly select their fixture rather than depending on project sort order.

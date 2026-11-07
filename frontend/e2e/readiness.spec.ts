@@ -21,6 +21,7 @@ test('readiness separates gaps, mismatches, manufacturer evidence and authoritat
 
 test('L6 links to a precise setting and device field; edits invalidate checks',async({page})=>{
  await page.goto('/')
+ await page.getByLabel('选择项目').selectOption('LPE-DEMO-LV01-001')
  await page.getByRole('button',{name:'复制为新项目'}).click()
  await expect(page.locator('.projectBar strong')).toHaveText('LV-01 新建样板')
  const check=async()=>{await page.getByRole('button',{name:/L6 运行条件检查/}).click();await page.getByRole('button',{name:'运行数据规则检查',exact:true}).click();await expect(page.locator('.issueSummary')).toBeVisible()}
@@ -54,6 +55,7 @@ test('L6 links to a precise setting and device field; edits invalidate checks',a
 
 test('connection finding opens device-first correction and preserves connection identity',async({page})=>{
  await page.goto('/')
+ await page.getByLabel('选择项目').selectOption('LPE-DEMO-LV01-001')
  await page.getByRole('button',{name:'复制为新项目'}).click()
  await expect(page.locator('.projectBar strong')).toHaveText('LV-01 新建样板')
  const edge=baseline.edges[0]

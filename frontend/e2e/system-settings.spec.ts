@@ -2,6 +2,7 @@ import {test,expect} from '@playwright/test'
 
 test('system settings persist and invalidate prior operating-condition checks',async({page})=>{
  await page.goto('/')
+ await page.getByLabel('选择项目').selectOption('LPE-DEMO-LV01-001')
  await page.getByRole('button',{name:'复制为新项目'}).click()
  await expect(page.locator('.projectBar strong')).toHaveText('LV-01 新建样板')
  await page.getByRole('button',{name:/L6 运行条件检查/}).click()

@@ -3,6 +3,7 @@ import {test,expect} from '@playwright/test'
 test('LV-01 editing, persistence, telemetry, SOP review and generation',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message))
  await page.goto('/')
+ await page.getByLabel('选择项目').selectOption('LPE-DEMO-LV01-001')
  await expect(page.getByTestId('topology-canvas').locator('.x6-node').filter({hasNotText:'L1 待补全'})).toHaveCount(10)
  await page.getByRole('button',{name:'复制为新项目'}).click()
  await expect(page.locator('.projectBar strong')).toHaveText('LV-01 新建样板')
