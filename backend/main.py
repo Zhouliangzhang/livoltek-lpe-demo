@@ -12,6 +12,7 @@ from .domain import ROOT, SCHEMA, pilot, validate, digest, load
 from .store import Store, now
 from .sop import seed_templates, generate
 from .installation_tracking import register_tracking
+from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
 class Save(BaseModel):
     model: dict[str, Any]
@@ -61,6 +62,7 @@ def create_app(db_path=None):
             db.add('template','catalog',t)
     app.state.store = db
     register_tracking(app,db)
+    register_checklist(app,db)
 
     def project(id):
         try:
@@ -158,7 +160,7 @@ def create_app(db_path=None):
         if not result['valid']:
             raise HTTPException(422,result)
         try:
-            return db.add('plan',id,generate(p['model'],p['revision'],templates()))
+            return db.add('plan',id,{**generate(p['model'],p['revision'],templates()), 'checklist_items':checklist(p['model']), 'checklist_version':CHECKLIST_VERSION})
         except ValueError as e:
             raise HTTPException(422,str(e))
 
