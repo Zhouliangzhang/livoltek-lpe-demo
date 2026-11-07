@@ -39,6 +39,8 @@ def generate(model, revision, templates):
     tasks = []
     for t in templates:
         r = t['rule']
+        if r['rule_id'] in ('RULE-BESS-PREP','INSTALL-POSITION'):
+            continue
         if t['status'] == 'REJECTED' or not matches(r, model):
             continue
         if t['scope_type'] == 'LIVOLTEK_DEVICE':
@@ -94,6 +96,8 @@ def generate(model, revision, templates):
             t['depends_on']=t['depends_on']+[x['task_id'] for x in tasks if x['work_package']=='WP04']
         if t['task_id']=='RULE-ENERGIZATION-REVIEW' and 'INSTALL-PREPOWER' in installation_ids:
             t['depends_on']=t['depends_on']+['INSTALL-PREPOWER']
+    for t in tasks:
+        t['depends_on']=[d for d in t['depends_on'] if d not in ('RULE-BESS-PREP','INSTALL-POSITION')]
     ordered, remaining = [], tasks[:]
     ids = {t['task_id'] for t in tasks}
     for t in tasks:

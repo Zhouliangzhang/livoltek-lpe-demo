@@ -49,7 +49,7 @@ test('LV-01 editing, persistence, telemetry, SOP review and generation',async({p
  await expect(page.locator('.notice')).toContainText('已保存不可变版本')
  await page.getByRole('button',{name:'02 引导式安装',exact:true}).click()
  await page.getByRole('button',{name:'生成安装计划'}).click()
- await expect(page.getByText('储能设备安装资料核对',{exact:true})).toBeVisible()
+ await expect(page.getByText('通信与控制接线',{exact:true})).toBeVisible()
  await page.getByRole('button',{name:'检查正式发布门禁'}).click()
  await expect(page.locator('.notice')).toContainText('Production release disabled')
  await page.getByRole('button',{name:'记录模拟结果'}).first().click()

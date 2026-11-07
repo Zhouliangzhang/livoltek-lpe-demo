@@ -34,7 +34,7 @@ test('forward prompts locate missing fields; no L6 or shortcut bypass',async({pa
  await expect(page.getByLabel('EMS_MASTER.control_strategy planned',{exact:true})).toBeFocused()
  await page.getByLabel('EMS_MASTER.control_strategy planned',{exact:true}).fill('自发自用；测试计划')
  await page.getByRole('button',{name:'继续下一环节',exact:true}).click()
- await expect(page.getByRole('heading',{name:'安装检查工作包',exact:true})).toBeVisible()
+ await expect(page.getByRole('heading',{name:'通信接线与技术指引',exact:true})).toBeVisible()
 })
 
 

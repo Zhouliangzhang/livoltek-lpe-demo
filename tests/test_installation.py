@@ -5,7 +5,8 @@ def test_installation_workflow_is_blocked_versioned_and_dependency_ordered():
     plan=generate(pilot(),1,seed_templates())
     tasks={t['task_id']:t for t in plan['tasks']}
     order=[t['task_id'] for t in plan['tasks']]
-    for key in ['POSITION','EARTH','POWER','COMMS','PREPOWER']:
+    assert 'INSTALL-POSITION' not in tasks and 'RULE-BESS-PREP' not in tasks
+    for key in ['EARTH','POWER','COMMS','PREPOWER']:
         t=tasks['INSTALL-'+key]
         assert t['readiness']=='BLOCKED'
         assert len(t['installation_steps'])==3

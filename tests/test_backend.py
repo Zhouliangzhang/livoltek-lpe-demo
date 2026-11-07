@@ -55,7 +55,7 @@ def test_plans_block_production_and_stale_evidence(client):
 
 def test_template_versions_and_plan_freeze(client):
     old_plan=client.post(f'/api/projects/{PID}/plans').json()
-    t=next(x for x in client.get('/api/templates').json() if 'BESS' in x['template_id'])
+    t=next(x for x in client.get('/api/templates').json() if 'METER' in x['template_id'])
     body={'expected_version':t['version'],'title':t['title'],'instructions':'Revised guidance','source_document_ref':'DEMO-REVIEW-REF','status':'APPROVED','reviewer':'Engineer','reason':'simulation review'}
     assert client.post('/api/templates/'+t['template_id'],json=body).status_code==200
     new=client.post(f'/api/projects/{PID}/plans').json()
@@ -101,11 +101,11 @@ def test_third_party_bess_never_gets_manufacturer_internal_task():
     assert any(t['task_id']=='BOUNDARY-LOAD_01' for t in p['tasks'])
 
 def test_simulated_pass_requires_evidence_and_retains_failure(client):
-    t=next(x for x in client.get('/api/templates').json() if 'BESS' in x['template_id'])
+    t=next(x for x in client.get('/api/templates').json() if 'METER' in x['template_id'])
     b={'expected_version':1,'title':t['title'],'instructions':t['instructions'],'source_document_ref':'DEMO-REF', 'status':'APPROVED','reviewer':'Reviewer','reason':'test'}
     client.post('/api/templates/'+t['template_id'],json=b)
     plan=client.post(f'/api/projects/{PID}/plans').json()
-    task=next(t for t in plan['tasks'] if t['task_id']=='RULE-BESS-PREP')
+    task=next(t for t in plan['tasks'] if t['task_id']=='RULE-METER-COMM')
     assert task['readiness']=='DRAFT_ONLY'
     data={'task_id':task['task_id'],'result':'PASS','reviewer':'EPC','note':'simulation','evidence':{}}
     url=f'/api/plans/{plan["id"]}/evidence'
@@ -122,6 +122,6 @@ def test_rule_edit_is_schema_validated(client):
     assert client.post('/api/templates/'+t['template_id'],json=b).status_code==422
 
 def test_dependency_cycle_is_rejected():
-    ts=seed_templates();ts[0]['rule']['depends_on']=['RULE-METER-COMM']
+    ts=seed_templates();ts[1]['rule']['depends_on']=['RULE-METER-COMM']
     with pytest.raises(ValueError,match='cycle'):
         generate(pilot(),1,ts)
