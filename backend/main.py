@@ -11,6 +11,7 @@ from jsonschema import Draft202012Validator
 from .domain import ROOT, SCHEMA, pilot, validate, digest, load
 from .store import Store, now
 from .sop import seed_templates, generate
+from .installation_tracking import register_tracking
 
 class Save(BaseModel):
     model: dict[str, Any]
@@ -59,6 +60,7 @@ def create_app(db_path=None):
         if t['template_id'] not in existing_templates:
             db.add('template','catalog',t)
     app.state.store = db
+    register_tracking(app,db)
 
     def project(id):
         try:
