@@ -1,0 +1,1362 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.livoltek.example/engineering-model/v1.1",
+  "title": "LIVOLTEK Engineering Model Schema V1.1",
+  "description": "Draft contract for M1 engineering topology snapshots and M2 inputs; not a safety-approved electrical design. System-aware model includes relevant third-party equipment, responsibilities, permissions, test/diagnostic scope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project",
+    "baseline",
+    "nodes",
+    "ports",
+    "edges",
+    "device_models",
+    "device_assets",
+    "parameters",
+    "review_records",
+    "deviations",
+    "telemetry_bindings",
+    "view_layout"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "country_code": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "voltage_level": {
+          "type": "string",
+          "enum": [
+            "LV",
+            "MV"
+          ]
+        },
+        "structure_code": {
+          "type": "string",
+          "enum": [
+            "LV-01",
+            "LV-02",
+            "MV-01",
+            "MV-02",
+            "MV-03"
+          ]
+        },
+        "energy_features": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "PV",
+              "ESS",
+              "DIESEL",
+              "EV_CHARGING",
+              "GRID",
+              "OTHER"
+            ]
+          }
+        },
+        "operation_modes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "GRID_CONNECTED",
+              "ISLANDED",
+              "OFF_GRID"
+            ]
+          }
+        },
+        "epc_org_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "owner_org_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "DRAFT",
+            "ACTIVE",
+            "ARCHIVED"
+          ]
+        }
+      },
+      "required": [
+        "project_id",
+        "name",
+        "country_code",
+        "voltage_level",
+        "structure_code",
+        "energy_features",
+        "operation_modes",
+        "epc_org_id",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "baseline": {
+      "type": "object",
+      "properties": {
+        "baseline_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "DRAFT",
+            "IN_REVIEW",
+            "APPROVED",
+            "PUBLISHED",
+            "SUPERSEDED"
+          ]
+        },
+        "source_design_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "country_profile_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "device_master_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "rule_pack_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "approved_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "approved_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "published_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "content_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "baseline_id",
+        "version",
+        "status",
+        "country_profile_ref",
+        "device_master_version",
+        "rule_pack_version"
+      ],
+      "additionalProperties": false
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "logical_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "parent_node_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "node_type": {
+            "type": "string",
+            "enum": [
+              "PCC",
+              "TRANSFORMER_ZONE",
+              "TRANSFORMER",
+              "MV_BUS",
+              "LV_BUS",
+              "FEEDER",
+              "BREAKER",
+              "SWITCH",
+              "ATS",
+              "STS",
+              "PCS",
+              "BESS",
+              "PV_INVERTER",
+              "EMS",
+              "METER",
+              "GENERATOR",
+              "EV_CHARGER",
+              "LOAD",
+              "JUNCTION",
+              "OTHER"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "zone_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "device_asset_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "icon_key": {
+            "type": "string"
+          },
+          "relationship_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reason for in-scope inclusion"
+          }
+        },
+        "required": [
+          "node_id",
+          "logical_id",
+          "parent_node_id",
+          "node_type",
+          "name",
+          "zone_id",
+          "device_asset_id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "port_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "node_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "AC",
+              "DC",
+              "ETHERNET",
+              "RS485",
+              "CAN",
+              "DIGITAL_IO",
+              "ANALOG_IO",
+              "CONTROL_LOGICAL",
+              "OTHER"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "IN",
+              "OUT",
+              "BIDIRECTIONAL",
+              "NONE"
+            ]
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "approved_spec_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "port_id",
+          "node_id",
+          "name",
+          "domain",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "edge_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "edge_type": {
+            "type": "string",
+            "enum": [
+              "ELECTRICAL",
+              "COMMUNICATION",
+              "CONTROL"
+            ]
+          },
+          "from_port_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "to_port_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "design_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "review_status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "IN_REVIEW",
+              "APPROVED"
+            ]
+          },
+          "integration_dependency": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Functional dependency not the physical edge type"
+          }
+        },
+        "required": [
+          "edge_id",
+          "edge_type",
+          "from_port_id",
+          "to_port_id",
+          "review_status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "device_models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "model_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "manufacturer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "model_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "product_family": {
+            "type": "string"
+          },
+          "master_data_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "rated_parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "DESIGN",
+                    "NAMEPLATE",
+                    "MEASURED",
+                    "CALCULATED",
+                    "MASTER_DATA"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "DRAFT",
+                    "VERIFIED",
+                    "APPROVED"
+                  ]
+                },
+                "source_ref": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "unit",
+                "source"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "sop_catalog_refs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "datasheet_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "integration_role": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Functional role in wider project system"
+          },
+          "interface_specifications": {
+            "type": "array",
+            "description": "Available interfaces with evidence; not authorization",
+            "items": {
+              "type": "object"
+            }
+          },
+          "source_quality": {
+            "type": "string",
+            "description": "UNVERIFIED/DRAFT/VERIFIED",
+            "enum": [
+              "UNVERIFIED",
+              "DRAFT",
+              "VERIFIED"
+            ]
+          },
+          "document_refs": {
+            "type": "array",
+            "description": "Datasheet and protocol documentation references",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "model_id",
+          "manufacturer",
+          "model_name",
+          "master_data_version"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "device_assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "model_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "serial_number": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sn_status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SCANNED",
+              "VERIFIED",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "installed_location": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "firmware_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lifecycle_status": {
+            "type": "string",
+            "enum": [
+              "PLANNED",
+              "DELIVERED",
+              "INSTALLED",
+              "REPLACED",
+              "RETIRED"
+            ]
+          },
+          "modeling_level": {
+            "type": "string",
+            "description": "Data depth independent of manufacturer",
+            "enum": [
+              "L1_FULL",
+              "L2_INTERFACE",
+              "L3_BOUNDARY"
+            ]
+          },
+          "responsibility_owner": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Contract or engineering responsibility owner"
+          },
+          "equipment_origin": {
+            "type": "string",
+            "description": "Equipment origin",
+            "enum": [
+              "LIVOLTEK",
+              "THIRD_PARTY",
+              "EXTERNAL_SYSTEM"
+            ]
+          },
+          "telemetry_capabilities": {
+            "type": "array",
+            "description": "telemetry_capabilities; availability never implies permission",
+            "items": {
+              "type": "object"
+            }
+          },
+          "control_capabilities": {
+            "type": "array",
+            "description": "control_capabilities; availability never implies permission",
+            "items": {
+              "type": "object"
+            }
+          },
+          "test_capabilities": {
+            "type": "array",
+            "description": "test_capabilities; availability never implies permission",
+            "items": {
+              "type": "object"
+            }
+          },
+          "diagnostic_capabilities": {
+            "type": "array",
+            "description": "diagnostic_capabilities; availability never implies permission",
+            "items": {
+              "type": "object"
+            }
+          },
+          "authorization": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "read_allowed": {
+                "type": "boolean"
+              },
+              "write_allowed": {
+                "type": "boolean"
+              },
+              "test_execution_allowed": {
+                "type": "boolean"
+              },
+              "approval_ref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "operator_role": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "read_allowed",
+              "write_allowed",
+              "test_execution_allowed"
+            ]
+          }
+        },
+        "required": [
+          "asset_id",
+          "model_id",
+          "serial_number",
+          "sn_status",
+          "lifecycle_status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "parameter_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "PROJECT",
+              "NODE",
+              "ASSET",
+              "PORT",
+              "EDGE"
+            ]
+          },
+          "owner_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "planned": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "unit": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": [
+                      "DESIGN",
+                      "NAMEPLATE",
+                      "MEASURED",
+                      "CALCULATED",
+                      "MASTER_DATA"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "DRAFT",
+                      "VERIFIED",
+                      "APPROVED"
+                    ]
+                  },
+                  "source_ref": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit",
+                  "source"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actual": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "unit": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": [
+                      "DESIGN",
+                      "NAMEPLATE",
+                      "MEASURED",
+                      "CALCULATED",
+                      "MASTER_DATA"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "DRAFT",
+                      "VERIFIED",
+                      "APPROVED"
+                    ]
+                  },
+                  "source_ref": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit",
+                  "source"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approved": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "unit": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string",
+                    "enum": [
+                      "DESIGN",
+                      "NAMEPLATE",
+                      "MEASURED",
+                      "CALCULATED",
+                      "MASTER_DATA"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "DRAFT",
+                      "VERIFIED",
+                      "APPROVED"
+                    ]
+                  },
+                  "source_ref": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit",
+                  "source"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "criticality": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "NORMAL",
+              "SAFETY_CRITICAL"
+            ]
+          },
+          "reference_doc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "review_status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "IN_REVIEW",
+              "APPROVED"
+            ]
+          }
+        },
+        "required": [
+          "parameter_id",
+          "scope",
+          "owner_id",
+          "name",
+          "planned",
+          "actual",
+          "approved",
+          "criticality",
+          "review_status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "review_records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "review_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "target_type": {
+            "type": "string",
+            "enum": [
+              "TOPOLOGY",
+              "NODE",
+              "EDGE",
+              "ASSET",
+              "PARAMETER",
+              "RULE",
+              "SOP"
+            ]
+          },
+          "target_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "UNDER_REVIEW",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "comment": {
+            "type": "string"
+          },
+          "reviewer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timestamp": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "review_id",
+          "target_type",
+          "target_id",
+          "decision"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "deviations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "deviation_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "target_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "WARNING",
+              "BLOCKER",
+              "SAFETY_CRITICAL"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "UNDER_REVIEW",
+              "APPROVED",
+              "RESOLVED",
+              "REJECTED"
+            ]
+          },
+          "approval_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "deviation_id",
+          "target_id",
+          "description",
+          "severity",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "telemetry_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "binding_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "target_type": {
+            "type": "string",
+            "enum": [
+              "NODE",
+              "EDGE",
+              "PORT"
+            ]
+          },
+          "target_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "measurement": {
+            "type": "string",
+            "enum": [
+              "ACTIVE_POWER",
+              "REACTIVE_POWER",
+              "VOLTAGE",
+              "CURRENT",
+              "SOC",
+              "STATUS"
+            ]
+          },
+          "source_system": {
+            "type": "string",
+            "enum": [
+              "EMS",
+              "PCS",
+              "METER",
+              "RSP",
+              "OTHER"
+            ]
+          },
+          "point_ref": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "unit": {
+            "type": "string"
+          },
+          "positive_direction": {
+            "type": "string",
+            "enum": [
+              "FROM_TO",
+              "TO_FROM",
+              "IMPORT",
+              "EXPORT",
+              "CHARGE",
+              "DISCHARGE"
+            ]
+          },
+          "max_age_seconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quality_required": {
+            "type": "string",
+            "enum": [
+              "GOOD"
+            ]
+          }
+        },
+        "required": [
+          "binding_id",
+          "target_type",
+          "target_id",
+          "measurement",
+          "source_system",
+          "point_ref",
+          "unit",
+          "positive_direction",
+          "max_age_seconds",
+          "quality_required"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "view_layout": {
+      "type": "object",
+      "properties": {
+        "editor": {
+          "type": "string"
+        },
+        "positions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "layer_visibility": {
+          "type": "object",
+          "properties": {
+            "ELECTRICAL": {
+              "type": "boolean"
+            },
+            "COMMUNICATION": {
+              "type": "boolean"
+            },
+            "CONTROL": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "ELECTRICAL",
+            "COMMUNICATION",
+            "CONTROL"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "editor",
+        "positions",
+        "layer_visibility"
+      ],
+      "additionalProperties": false
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ref_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "doc_type": {
+            "type": "string"
+          },
+          "uri": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "approval_status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "APPROVED"
+            ]
+          }
+        },
+        "required": [
+          "ref_id",
+          "doc_type",
+          "uri",
+          "revision",
+          "approval_status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "interface_bindings": {
+      "type": "array",
+      "description": "Third-party or proprietary point mapping and confidence",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "binding_id",
+          "asset_id",
+          "signal_name",
+          "direction",
+          "verification_status",
+          "source_ref"
+        ],
+        "properties": {
+          "binding_id": {
+            "type": "string"
+          },
+          "asset_id": {
+            "type": "string"
+          },
+          "signal_name": {
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "READ",
+              "WRITE",
+              "READ_WRITE"
+            ]
+          },
+          "protocol": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "point_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verification_status": {
+            "enum": [
+              "UNVERIFIED",
+              "DRAFT",
+              "VERIFIED"
+            ]
+          },
+          "source_ref": {
+            "type": "string"
+          },
+          "authorization_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "test_scopes": {
+      "type": "array",
+      "description": "System-level test scope without assuming third party device certification",
+      "items": {
+        "type": "object",
+        "required": [
+          "test_id",
+          "level",
+          "targets",
+          "execution_mode",
+          "review_status"
+        ],
+        "properties": {
+          "test_id": {
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "DEVICE",
+              "INTERFACE",
+              "SYSTEM"
+            ]
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "execution_mode": {
+            "enum": [
+              "AUTO",
+              "ASSISTED",
+              "MANUAL_WITNESS"
+            ]
+          },
+          "required_signals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "review_status": {
+            "enum": [
+              "DRAFT",
+              "UNDER_REVIEW",
+              "APPROVED"
+            ]
+          },
+          "scope_limit": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "diagnostic_paths": {
+      "type": "array",
+      "description": "M5 diagnostic evidence chains",
+      "items": {
+        "type": "object",
+        "required": [
+          "path_id",
+          "name",
+          "target_assets",
+          "status"
+        ],
+        "properties": {
+          "path_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "target_assets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "required_signals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "enum": [
+              "DRAFT",
+              "UNDER_REVIEW",
+              "APPROVED"
+            ]
+          },
+          "missing_data_behavior": {
+            "enum": [
+              "UNKNOWN",
+              "BLOCKED"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,732 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "project_id": "LPE-DEMO-LV01-001",
+    "name": "LV-01 PV+BESS Demo",
+    "country_code": "ZA",
+    "voltage_level": "LV",
+    "structure_code": "LV-01",
+    "energy_features": [
+      "PV",
+      "ESS",
+      "GRID"
+    ],
+    "operation_modes": [
+      "GRID_CONNECTED"
+    ],
+    "epc_org_id": "EPC-DEMO",
+    "owner_org_id": null,
+    "status": "DRAFT"
+  },
+  "baseline": {
+    "baseline_id": "BL-DEMO-001",
+    "version": "0.1.0",
+    "status": "DRAFT",
+    "source_design_refs": [
+      "SLD-DEMO-REV-A"
+    ],
+    "country_profile_ref": "COUNTRY-ZA-DEMO",
+    "device_master_version": "DEMO-0",
+    "rule_pack_version": "DEMO-0",
+    "approved_by": null,
+    "approved_at": null,
+    "published_at": null,
+    "content_hash": null
+  },
+  "nodes": [
+    {
+      "node_id": "PCC_01",
+      "logical_id": "PCC_01",
+      "parent_node_id": null,
+      "node_type": "PCC",
+      "name": "PCC 01",
+      "zone_id": "ZONE_01",
+      "device_asset_id": null,
+      "attributes": {},
+      "icon_key": "pcc"
+    },
+    {
+      "node_id": "LV_BUS_01",
+      "logical_id": "LV_BUS_01",
+      "parent_node_id": null,
+      "node_type": "LV_BUS",
+      "name": "LV BUS 01",
+      "zone_id": "ZONE_01",
+      "device_asset_id": null,
+      "attributes": {},
+      "icon_key": "lv_bus"
+    },
+    {
+      "node_id": "PV_01",
+      "logical_id": "PV_01",
+      "parent_node_id": null,
+      "node_type": "PV_INVERTER",
+      "name": "PV 01",
+      "zone_id": "ZONE_01",
+      "device_asset_id": "ASSET_PV_01",
+      "attributes": {},
+      "icon_key": "pv_inverter"
+    },
+    {
+      "node_id": "BESS_01",
+      "logical_id": "BESS_01",
+      "parent_node_id": null,
+      "node_type": "BESS",
+      "name": "BESS 01",
+      "zone_id": "ZONE_01",
+      "device_asset_id": "ASSET_BESS_01",
+      "attributes": {},
+      "icon_key": "bess"
+    },
+    {
+      "node_id": "EMS_01",
+      "logical_id": "EMS_01",
+      "parent_node_id": null,
+      "node_type": "EMS",
+      "name": "EMS 01",
+      "zone_id": "ZONE_01",
+      "device_asset_id": "ASSET_EMS_01",
+      "attributes": {},
+      "icon_key": "ems"
+    },
+    {
+      "node_id": "METER_01",
+      "logical_id": "METER_01",
+      "parent_node_id": null,
+      "node_type": "METER",
+      "name": "METER 01",
+      "zone_id": "ZONE_01",
+      "device_asset_id": "ASSET_METER_01",
+      "attributes": {},
+      "icon_key": "meter"
+    },
+    {
+      "node_id": "LOAD_01",
+      "logical_id": "LOAD_01",
+      "parent_node_id": null,
+      "node_type": "LOAD",
+      "name": "LOAD 01",
+      "zone_id": "ZONE_01",
+      "device_asset_id": null,
+      "attributes": {},
+      "icon_key": "load"
+    },
+    {
+      "node_id": "BREAKER_PV",
+      "logical_id": "BREAKER_PV",
+      "parent_node_id": null,
+      "node_type": "BREAKER",
+      "name": "BREAKER PV",
+      "zone_id": "ZONE_01",
+      "device_asset_id": null,
+      "attributes": {},
+      "icon_key": "breaker"
+    },
+    {
+      "node_id": "BREAKER_BESS",
+      "logical_id": "BREAKER_BESS",
+      "parent_node_id": null,
+      "node_type": "BREAKER",
+      "name": "BREAKER BESS",
+      "zone_id": "ZONE_01",
+      "device_asset_id": null,
+      "attributes": {},
+      "icon_key": "breaker"
+    },
+    {
+      "node_id": "PV_TP_01",
+      "logical_id": "PV_TP_01",
+      "parent_node_id": null,
+      "node_type": "PV_INVERTER",
+      "name": "Third Party PV Inverter (Demo)",
+      "zone_id": "ZONE_01",
+      "device_asset_id": "ASSET_PV_TP_01",
+      "attributes": {
+        "modeling_level": "L2_INTERFACE"
+      },
+      "icon_key": "pv-inverter",
+      "relationship_reason": "ENERGY_PATH,TEST_DEPENDENCY,DIAGNOSTIC_DEPENDENCY"
+    }
+  ],
+  "ports": [
+    {
+      "port_id": "PCC_01.AC",
+      "node_id": "PCC_01",
+      "name": "AC",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "LV_BUS_01.AC_A",
+      "node_id": "LV_BUS_01",
+      "name": "AC_A",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "LV_BUS_01.AC_B",
+      "node_id": "LV_BUS_01",
+      "name": "AC_B",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "LV_BUS_01.AC_C",
+      "node_id": "LV_BUS_01",
+      "name": "AC_C",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "LV_BUS_01.AC_D",
+      "node_id": "LV_BUS_01",
+      "name": "AC_D",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "PV_01.AC",
+      "node_id": "PV_01",
+      "name": "AC",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "PV_01.COM",
+      "node_id": "PV_01",
+      "name": "COM",
+      "domain": "ETHERNET",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "BESS_01.AC",
+      "node_id": "BESS_01",
+      "name": "AC",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "BESS_01.COM",
+      "node_id": "BESS_01",
+      "name": "COM",
+      "domain": "ETHERNET",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "EMS_01.ETH1",
+      "node_id": "EMS_01",
+      "name": "ETH1",
+      "domain": "ETHERNET",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "EMS_01.ETH2",
+      "node_id": "EMS_01",
+      "name": "ETH2",
+      "domain": "ETHERNET",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "EMS_01.ETH3",
+      "node_id": "EMS_01",
+      "name": "ETH3",
+      "domain": "ETHERNET",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "EMS_01.CTRL_BESS",
+      "node_id": "EMS_01",
+      "name": "CTRL_BESS",
+      "domain": "CONTROL_LOGICAL",
+      "role": "OUT",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "BESS_01.CTRL",
+      "node_id": "BESS_01",
+      "name": "CTRL",
+      "domain": "CONTROL_LOGICAL",
+      "role": "IN",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "METER_01.AC",
+      "node_id": "METER_01",
+      "name": "AC",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "METER_01.COM",
+      "node_id": "METER_01",
+      "name": "COM",
+      "domain": "ETHERNET",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "LOAD_01.AC",
+      "node_id": "LOAD_01",
+      "name": "AC",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "BREAKER_PV.IN",
+      "node_id": "BREAKER_PV",
+      "name": "IN",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "BREAKER_PV.OUT",
+      "node_id": "BREAKER_PV",
+      "name": "OUT",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "BREAKER_BESS.IN",
+      "node_id": "BREAKER_BESS",
+      "name": "IN",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "BREAKER_BESS.OUT",
+      "node_id": "BREAKER_BESS",
+      "name": "OUT",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    },
+    {
+      "port_id": "PV_TP_01.AC",
+      "node_id": "PV_TP_01",
+      "name": "AC",
+      "domain": "AC",
+      "role": "BIDIRECTIONAL",
+      "attributes": {},
+      "approved_spec_ref": null
+    }
+  ],
+  "edges": [
+    {
+      "edge_id": "E01",
+      "edge_type": "ELECTRICAL",
+      "from_port_id": "PCC_01.AC",
+      "to_port_id": "LV_BUS_01.AC_A",
+      "attributes": {},
+      "design_ref": "SLD-DEMO-REV-A",
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "E02",
+      "edge_type": "ELECTRICAL",
+      "from_port_id": "PV_01.AC",
+      "to_port_id": "BREAKER_PV.IN",
+      "attributes": {},
+      "design_ref": "SLD-DEMO-REV-A",
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "E03",
+      "edge_type": "ELECTRICAL",
+      "from_port_id": "BREAKER_PV.OUT",
+      "to_port_id": "LV_BUS_01.AC_B",
+      "attributes": {},
+      "design_ref": "SLD-DEMO-REV-A",
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "E04",
+      "edge_type": "ELECTRICAL",
+      "from_port_id": "BESS_01.AC",
+      "to_port_id": "BREAKER_BESS.IN",
+      "attributes": {},
+      "design_ref": "SLD-DEMO-REV-A",
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "E05",
+      "edge_type": "ELECTRICAL",
+      "from_port_id": "BREAKER_BESS.OUT",
+      "to_port_id": "LV_BUS_01.AC_C",
+      "attributes": {},
+      "design_ref": "SLD-DEMO-REV-A",
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "E06",
+      "edge_type": "ELECTRICAL",
+      "from_port_id": "LV_BUS_01.AC_D",
+      "to_port_id": "LOAD_01.AC",
+      "attributes": {},
+      "design_ref": "SLD-DEMO-REV-A",
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "C01",
+      "edge_type": "COMMUNICATION",
+      "from_port_id": "EMS_01.ETH1",
+      "to_port_id": "BESS_01.COM",
+      "attributes": {},
+      "design_ref": null,
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "C02",
+      "edge_type": "COMMUNICATION",
+      "from_port_id": "EMS_01.ETH2",
+      "to_port_id": "METER_01.COM",
+      "attributes": {},
+      "design_ref": null,
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "C03",
+      "edge_type": "COMMUNICATION",
+      "from_port_id": "EMS_01.ETH3",
+      "to_port_id": "PV_01.COM",
+      "attributes": {},
+      "design_ref": null,
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "CTRL01",
+      "edge_type": "CONTROL",
+      "from_port_id": "EMS_01.CTRL_BESS",
+      "to_port_id": "BESS_01.CTRL",
+      "attributes": {},
+      "design_ref": null,
+      "review_status": "DRAFT"
+    },
+    {
+      "edge_id": "E_PV_TP_AC",
+      "edge_type": "ELECTRICAL",
+      "from_port_id": "PV_TP_01.AC",
+      "to_port_id": "LV_BUS_01.AC_A",
+      "attributes": {},
+      "design_ref": "DEMO-DESIGN-NOT-APPROVED",
+      "review_status": "DRAFT",
+      "integration_dependency": "ENERGY_PATH"
+    }
+  ],
+  "device_models": [
+    {
+      "model_id": "MODEL_BESS_DEMO_125_261",
+      "manufacturer": "DEMO_ONLY",
+      "model_name": "BESS 125kW/261kWh - illustrative only",
+      "master_data_version": "DEMO-0",
+      "rated_parameters": {},
+      "sop_catalog_refs": [],
+      "datasheet_ref": null
+    },
+    {
+      "model_id": "MODEL_PV_DEMO_100",
+      "manufacturer": "DEMO_ONLY",
+      "model_name": "PV Inverter 100kW illustrative",
+      "master_data_version": "DEMO-0",
+      "rated_parameters": {},
+      "sop_catalog_refs": [],
+      "datasheet_ref": null
+    },
+    {
+      "model_id": "MODEL_EMS_DEMO",
+      "manufacturer": "DEMO_ONLY",
+      "model_name": "EMS illustrative",
+      "master_data_version": "DEMO-0",
+      "rated_parameters": {},
+      "sop_catalog_refs": [],
+      "datasheet_ref": null
+    },
+    {
+      "model_id": "MODEL_METER_DEMO",
+      "manufacturer": "DEMO_ONLY",
+      "model_name": "PCC Meter illustrative",
+      "master_data_version": "DEMO-0",
+      "rated_parameters": {},
+      "sop_catalog_refs": [],
+      "datasheet_ref": null
+    },
+    {
+      "model_id": "MODEL_PV_THIRD_PARTY_DEMO",
+      "manufacturer": "THIRD_PARTY_DEMO",
+      "model_name": "PV inverter hypothetical (no verified vendor interface)",
+      "product_family": "PV_INVERTER",
+      "master_data_version": "DEMO-0",
+      "rated_parameters": {},
+      "sop_catalog_refs": [],
+      "datasheet_ref": null,
+      "integration_role": "PV_GENERATION",
+      "interface_specifications": [
+        {
+          "protocol": "Modbus TCP",
+          "status": "UNVERIFIED"
+        }
+      ],
+      "source_quality": "UNVERIFIED",
+      "document_refs": [
+        "THIRD-PARTY-MANUAL-PENDING"
+      ]
+    }
+  ],
+  "device_assets": [
+    {
+      "asset_id": "ASSET_BESS_01",
+      "model_id": "MODEL_BESS_DEMO_125_261",
+      "serial_number": null,
+      "sn_status": "PENDING",
+      "installed_location": null,
+      "firmware_version": null,
+      "lifecycle_status": "PLANNED"
+    },
+    {
+      "asset_id": "ASSET_PV_01",
+      "model_id": "MODEL_PV_DEMO_100",
+      "serial_number": null,
+      "sn_status": "PENDING",
+      "lifecycle_status": "PLANNED"
+    },
+    {
+      "asset_id": "ASSET_EMS_01",
+      "model_id": "MODEL_EMS_DEMO",
+      "serial_number": null,
+      "sn_status": "PENDING",
+      "lifecycle_status": "PLANNED"
+    },
+    {
+      "asset_id": "ASSET_METER_01",
+      "model_id": "MODEL_METER_DEMO",
+      "serial_number": null,
+      "sn_status": "PENDING",
+      "lifecycle_status": "PLANNED"
+    },
+    {
+      "asset_id": "ASSET_PV_TP_01",
+      "model_id": "MODEL_PV_THIRD_PARTY_DEMO",
+      "serial_number": null,
+      "sn_status": "PENDING",
+      "installed_location": null,
+      "firmware_version": null,
+      "lifecycle_status": "PLANNED",
+      "modeling_level": "L2_INTERFACE",
+      "responsibility_owner": "EPC_OR_THIRD_PARTY_TBD",
+      "equipment_origin": "THIRD_PARTY",
+      "telemetry_capabilities": [
+        {
+          "signal": "ACTIVE_POWER",
+          "status": "UNVERIFIED"
+        }
+      ],
+      "control_capabilities": [
+        {
+          "signal": "POWER_LIMIT",
+          "status": "UNVERIFIED"
+        }
+      ],
+      "test_capabilities": [
+        {
+          "test": "EMS_PV_COMMUNICATION",
+          "status": "DRAFT"
+        }
+      ],
+      "diagnostic_capabilities": [
+        {
+          "check": "COMMUNICATION",
+          "status": "DRAFT"
+        }
+      ],
+      "authorization": {
+        "read_allowed": false,
+        "write_allowed": false,
+        "test_execution_allowed": false,
+        "approval_ref": null,
+        "operator_role": null
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "parameter_id": "PAR-AC-VOLT",
+      "scope": "PROJECT",
+      "owner_id": "LPE-DEMO-LV01-001",
+      "name": "nominal_ac_voltage",
+      "planned": {
+        "value": 400,
+        "unit": "V",
+        "source": "DESIGN",
+        "status": "DRAFT"
+      },
+      "actual": null,
+      "approved": null,
+      "criticality": "NORMAL",
+      "reference_doc": "SLD-DEMO-REV-A",
+      "review_status": "DRAFT"
+    },
+    {
+      "parameter_id": "PAR-PCC-CABLE",
+      "scope": "EDGE",
+      "owner_id": "E01",
+      "name": "cable_spec",
+      "planned": null,
+      "actual": null,
+      "approved": null,
+      "criticality": "SAFETY_CRITICAL",
+      "reference_doc": null,
+      "review_status": "DRAFT"
+    }
+  ],
+  "review_records": [],
+  "deviations": [],
+  "telemetry_bindings": [
+    {
+      "binding_id": "TEL-PCC-P",
+      "target_type": "EDGE",
+      "target_id": "E01",
+      "measurement": "ACTIVE_POWER",
+      "source_system": "METER",
+      "point_ref": "DEMO.PCC.P_KW",
+      "unit": "kW",
+      "positive_direction": "FROM_TO",
+      "max_age_seconds": 30,
+      "quality_required": "GOOD"
+    }
+  ],
+  "view_layout": {
+    "editor": "antv-x6",
+    "positions": {
+      "PCC_01": {
+        "x": 0,
+        "y": 0
+      },
+      "LV_BUS_01": {
+        "x": 240,
+        "y": 0
+      },
+      "PV_01": {
+        "x": 480,
+        "y": 0
+      },
+      "BESS_01": {
+        "x": 0,
+        "y": 140
+      },
+      "EMS_01": {
+        "x": 240,
+        "y": 140
+      },
+      "METER_01": {
+        "x": 480,
+        "y": 140
+      },
+      "LOAD_01": {
+        "x": 0,
+        "y": 280
+      },
+      "BREAKER_PV": {
+        "x": 240,
+        "y": 280
+      },
+      "BREAKER_BESS": {
+        "x": 480,
+        "y": 280
+      }
+    },
+    "layer_visibility": {
+      "ELECTRICAL": true,
+      "COMMUNICATION": false,
+      "CONTROL": false
+    }
+  },
+  "source_refs": [
+    {
+      "ref_id": "SLD-DEMO-REV-A",
+      "doc_type": "SLD",
+      "uri": "demo://not-approved/sld",
+      "revision": "A",
+      "approval_status": "DRAFT"
+    }
+  ],
+  "interface_bindings": [
+    {
+      "binding_id": "IF_PV_POWER",
+      "asset_id": "ASSET_PV_TP_01",
+      "signal_name": "PV_ACTIVE_POWER",
+      "direction": "READ",
+      "protocol": "Modbus TCP",
+      "point_ref": null,
+      "unit": "kW",
+      "verification_status": "UNVERIFIED",
+      "source_ref": "THIRD-PARTY-MANUAL-PENDING",
+      "authorization_ref": null
+    }
+  ],
+  "test_scopes": [
+    {
+      "test_id": "TEST_EMS_PV_INTERFACE",
+      "level": "INTERFACE",
+      "targets": [
+        "ASSET_PV_TP_01"
+      ],
+      "execution_mode": "ASSISTED",
+      "required_signals": [
+        "IF_PV_POWER"
+      ],
+      "review_status": "DRAFT",
+      "scope_limit": "PV communication and signal verification only; not third-party equipment acceptance"
+    }
+  ],
+  "diagnostic_paths": [
+    {
+      "path_id": "DIAG_PV_POWER_MISMATCH",
+      "name": "PV power measurement interface issue",
+      "target_assets": [
+        "ASSET_PV_TP_01"
+      ],
+      "required_signals": [
+        "IF_PV_POWER"
+      ],
+      "status": "DRAFT",
+      "missing_data_behavior": "UNKNOWN"
+    }
+  ]
+}

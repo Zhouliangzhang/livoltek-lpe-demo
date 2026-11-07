@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "M2 SOP applicability rules V1.0 (draft)",
+  "type": "object",
+  "required": [
+    "rule_pack_id",
+    "version",
+    "status",
+    "rules"
+  ],
+  "properties": {
+    "rule_pack_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "PUBLISHED",
+        "WITHDRAWN"
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "APPROVED",
+              "PUBLISHED",
+              "REJECTED"
+            ]
+          },
+          "sop_template_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "sop_version": {
+            "type": "string"
+          },
+          "work_package": {
+            "type": "string",
+            "enum": [
+              "WP01",
+              "WP02",
+              "WP03",
+              "WP04",
+              "WP05",
+              "WP06",
+              "WP07"
+            ]
+          },
+          "when": {
+            "type": "object",
+            "properties": {
+              "node_type_present": {
+                "type": "string"
+              },
+              "edge_type_present": {
+                "type": "string"
+              },
+              "structure_code": {
+                "type": "string"
+              },
+              "required_parameter_names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [],
+            "additionalProperties": false
+          },
+          "evidence_requirements": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          },
+          "risk": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "SAFETY_CRITICAL"
+            ]
+          },
+          "source_doc_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope_type": {
+            "type": "string",
+            "description": "Manufacturer guided installation scope / source / owner / authorization"
+          },
+          "source_document_ref": {
+            "type": "string",
+            "description": "Manufacturer guided installation scope / source / owner / authorization"
+          },
+          "task_owner": {
+            "type": "string",
+            "description": "Manufacturer guided installation scope / source / owner / authorization"
+          },
+          "execution_authority": {
+            "type": "string",
+            "description": "Manufacturer guided installation scope / source / owner / authorization"
+          }
+        },
+        "required": [
+          "rule_id",
+          "status",
+          "sop_template_id",
+          "work_package",
+          "when",
+          "evidence_requirements",
+          "depends_on",
+          "risk"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

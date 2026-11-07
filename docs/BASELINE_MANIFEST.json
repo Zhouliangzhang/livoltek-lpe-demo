@@ -1,0 +1,81 @@
+{
+  "source": "C:/Users/zhoul/Downloads/LIVOLTEK_LPE_System_Aware_Update_V1.1_Download.zip",
+  "archive_sha256": "4477D797EB33F32C1615B0BC9D2DEBB8AC0F5CEE0DC23323EA80CA69FA1D4376",
+  "files": [
+    {
+      "file": "CHANGELOG_V1.1.md",
+      "sha256": "CD2DCAC7CD3E8E4E693A81D080FAD8E9A56AC0F06128685558F87E9AB6839FF7",
+      "bytes": 983
+    },
+    {
+      "file": "engineering-model.schema.json",
+      "sha256": "1F9CEB1E8ACE7723FEAC2188263457F1D567188DEB8D32F1E956142AF95C2DFD",
+      "bytes": 32400
+    },
+    {
+      "file": "LIVOLTEK_Engineering_Model_Schema_V1.1.docx",
+      "sha256": "167F4897D575D603FA5AA8DF926B7030A0573374E753253C9621B2C19C2A9978",
+      "bytes": 45235
+    },
+    {
+      "file": "LIVOLTEK_Engineering_Model_Schema_V1.1.md",
+      "sha256": "472043977003E96EEF0A47D891190382B7285E53DB80655C04766EBFCDFD6927",
+      "bytes": 15215
+    },
+    {
+      "file": "LIVOLTEK_LPE_PRD_V2.1.docx",
+      "sha256": "39718BA6C99F3432F8844696DCF6E128684E40F6A6B9198AC7B83436C4A03B95",
+      "bytes": 49104
+    },
+    {
+      "file": "LIVOLTEK_LPE_PRD_V2.1.md",
+      "sha256": "19FE96413FD00EEB61CC8E39CC972BBA93F4C8347738D9C5BC3A317AA1CF4C89",
+      "bytes": 22215
+    },
+    {
+      "file": "LIVOLTEK_M1_Detailed_Design_V1.2.docx",
+      "sha256": "EB2AD8D74A21702EEA7AAD093C8DA1996385AFD6EB27F94B1E1DDFB8CD2469A8",
+      "bytes": 61769
+    },
+    {
+      "file": "LIVOLTEK_M1_Detailed_Design_V1.2.md",
+      "sha256": "B8B30340707C62498B4FA282666043AC62444D4E4B597A76C2E84A6ED45DCFA1",
+      "bytes": 47394
+    },
+    {
+      "file": "LIVOLTEK_M2_Detailed_Design_V1.1.docx",
+      "sha256": "5B0D3CC1096242F07016B9427AC6FED4559FF7467B5E9AD324B4B475425683FE",
+      "bytes": 52432
+    },
+    {
+      "file": "LIVOLTEK_M2_Detailed_Design_V1.1.md",
+      "sha256": "0442AFD1BB2486A56F921463D17119BFD7F520B2649D104523EC31008EABE216",
+      "bytes": 28316
+    },
+    {
+      "file": "lv01-demo.engineering-model.json",
+      "sha256": "7A768C1486404EA31D1E654556F455D79CA42213A1871DC98EDD1641F89B5987",
+      "bytes": 13965
+    },
+    {
+      "file": "lv01-demo.sop-rules.json",
+      "sha256": "DBE726ED15A89703EECF20BC2474C98FEAB34B72C25F388DA0CF95566514C4A5",
+      "bytes": 1518
+    },
+    {
+      "file": "lv01-mixed-vendors.engineering-model.json",
+      "sha256": "A4545AB28E6DCAA36D7F408B9B3C78555146A9E012BAA8B8AAE079991E0F0F12",
+      "bytes": 17753
+    },
+    {
+      "file": "sop-rule-pack.schema.json",
+      "sha256": "D9F33BF8500052EBB046E9891311130A91B0FA53C5D17098B65C912DC42581D5",
+      "bytes": 3709
+    },
+    {
+      "file": "validate_demo.py",
+      "sha256": "3361E4FD0518969CD984A6BAF52A5D8D7BDD10F5B22F5585E83799AE9FBB61A8",
+      "bytes": 4792
+    }
+  ]
+}

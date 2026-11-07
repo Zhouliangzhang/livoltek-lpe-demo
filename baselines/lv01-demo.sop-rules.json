@@ -1,0 +1,65 @@
+{
+  "rule_pack_id": "SOP-DEMO-RULES",
+  "version": "0.1",
+  "status": "DRAFT",
+  "rules": [
+    {
+      "rule_id": "RULE-BESS-PREP",
+      "status": "DRAFT",
+      "sop_template_id": "SOP-BESS-PREP-DEMO",
+      "sop_version": "0.1",
+      "work_package": "WP02",
+      "when": {
+        "node_type_present": "BESS"
+      },
+      "evidence_requirements": [
+        "photo",
+        "installation_clearance_review"
+      ],
+      "depends_on": [],
+      "risk": "MEDIUM",
+      "source_doc_ref": null
+    },
+    {
+      "rule_id": "RULE-METER-COMM",
+      "status": "DRAFT",
+      "sop_template_id": "SOP-METER-COMM-DEMO",
+      "sop_version": "0.1",
+      "work_package": "WP04",
+      "when": {
+        "node_type_present": "METER",
+        "edge_type_present": "COMMUNICATION"
+      },
+      "evidence_requirements": [
+        "communication_map",
+        "test_record"
+      ],
+      "depends_on": [
+        "RULE-BESS-PREP"
+      ],
+      "risk": "MEDIUM",
+      "source_doc_ref": null
+    },
+    {
+      "rule_id": "RULE-ENERGIZATION-REVIEW",
+      "status": "DRAFT",
+      "sop_template_id": "SOP-ENERGIZATION-GATE-DEMO",
+      "sop_version": "0.1",
+      "work_package": "WP07",
+      "when": {
+        "required_parameter_names": [
+          "cable_spec"
+        ]
+      },
+      "evidence_requirements": [
+        "approved_design_reference",
+        "signed_checklist"
+      ],
+      "depends_on": [
+        "RULE-METER-COMM"
+      ],
+      "risk": "SAFETY_CRITICAL",
+      "source_doc_ref": null
+    }
+  ]
+}
