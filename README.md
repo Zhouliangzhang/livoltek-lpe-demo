@@ -117,3 +117,11 @@ Placeholders are display-only: they create no persisted assets, ports, assignmen
 The overview reports L2 template coverage, L3 SN/model-version coverage, L4 recorded connections, L5 planned/actual/approved presence, and L6 current-revision review/baseline state. These are evidence counts, not approval or complete-design claims. The original baselines and manufacturer approval boundaries are unchanged.
 
 Validated: production build and five tests (three framework cases plus both browser regression workflows).
+
+### L4 device-first connections
+
+L4 now starts with source device/structure, source port, target device/structure and target port. It lists recorded L2/L3 objects and filters ports by selected object and connection kind, direction, matching domain and known electrical voltage/phase values. Exactly one available port is automatically selected; multiple options require explicit selection. Self-connections and already-recorded pairs are excluded from target choices. Changing source or connection kind clears dependent choices.
+
+Save Connection validates through the existing project-save endpoint and persists a new optimistic-concurrency-checked engineering revision, including other current project changes (stated beside the action). On success the returned model refreshes the connection table and generated read-only topology. Failure keeps the form and shows the server error. Connections remain DRAFT; compatibility checks do not constitute engineering approval.
+
+Validated: production build and seven tests, including automatic single-port selection, multi-port choice, incompatible endpoints, control direction, duplicate/voltage filtering, immediate topology update and reload persistence.
