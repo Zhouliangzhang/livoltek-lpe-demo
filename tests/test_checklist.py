@@ -29,3 +29,25 @@ def test_checklist_records_and_guards(tmp_path):
     client.post('/api/projects',json={'model':current['model'],'expected_revision':current['revision']})
     assert client.post(url,json=body).status_code==409
     assert len(client.get(url).json()['records'])==2
+
+def test_meter_detail_results_and_execution_gate(tmp_path):
+    import json
+    from pathlib import Path
+    client=TestClient(create_app(str(tmp_path/'meter.db')))
+    model=json.loads(Path('examples/ci20-pilot.json').read_text(encoding='utf-8'))
+    pid=model['project']['project_id']
+    assert client.post('/api/projects',json={'model':model,'expected_revision':0}).status_code==200
+    plan=client.post(f'/api/projects/{pid}/plans').json()
+    url=f'/api/plans/{plan["id"]}/checklist'
+    listing=client.get(url).json()
+    assert listing['baseline_model']['ports']==model['ports']
+    item=next(i for i in listing['items'] if i['stage']=='COMMUNICATION' and 'METER_PCC' in i['node_ids'] and 'EMS_MASTER' in i['node_ids'] and i['id'].endswith(':1'))
+    body=dict(item_id=item['id'],status='PENDING',recorder='EPC',note='测试读取',detail_key='identity',actual_values={'identity':'TEST-ONLY'})
+    assert client.post(url,json=body).status_code==422
+    body['execution_reference']='TEST-PERMIT / approved diagnostic reference'
+    assert client.post(url,json=body).status_code==200
+    assert client.post(url,json={**body,'detail_key':'ports'}).status_code==422
+    assert client.post(url,json={**body,'status':'PASS'}).status_code==422
+    assert client.post(url,json={**body,'detail_key':'readings','actual_values':{'ems_power':'25 kW'}}).status_code==200
+    saved=client.get(url).json()['records']
+    assert saved[0]['detail_key']=='readings' and saved[1]['actual_values']=={'identity':'TEST-ONLY'}

@@ -54,6 +54,9 @@ class CheckRecord(BaseModel):
     status: Literal['PASS','FAIL','PENDING','NA']
     recorder: str = Field(min_length=1,max_length=100)
     note: str = Field(min_length=1,max_length=4000)
+    detail_key: Literal['ports','wiring','settings','identity','readings'] | None = None
+    actual_values: dict[str,str] = Field(default_factory=dict,max_length=40)
+    execution_reference: str = Field(default='',max_length=1000)
     photo_ids: list[str] = Field(default_factory=list,max_length=10)
 
 def register_checklist(app,db):
@@ -71,19 +74,32 @@ def register_checklist(app,db):
 
     @app.get('/api/plans/{id}/checklist')
     def listing(id:str):
-        _,items,_=context(id)
-        return {'version':VERSION,'items':items,'records':db.records('checklist',id)}
+        plan,items,_=context(id)
+        return {'version':VERSION,'items':items,'records':db.records('checklist',id),'baseline_model':plan['system_context_baseline']}
 
     @app.post('/api/plans/{id}/checklist')
     def save(id:str,body:CheckRecord):
-        _,_,item=context(id,body.item_id,True)
+        plan,_,item=context(id,body.item_id,True)
+        if body.detail_key:
+            model=plan['system_context_baseline']
+            kinds={n['node_type'] for n in model['nodes'] if n['node_id'] in item['node_ids']}
+            allowed=['ports','wiring'] if body.item_id.endswith(':0') else ['settings','identity','readings']
+            if item['stage']!='COMMUNICATION' or not {'METER','EMS'} <= kinds or body.detail_key not in allowed:
+                raise HTTPException(422,'具体点检项不适用于本对象')
+            if any(len(k)>150 or len(v)>2000 for k,v in body.actual_values.items()):
+                raise HTTPException(422,'实际结果内容过长')
+            if body.detail_key in ['identity','readings'] and any(v.strip() for v in body.actual_values.values()) and not body.execution_reference.strip():
+                raise HTTPException(422,'记录上电读取结果前，请填写已批准的现场测试条件及方法引用')
+            if body.status=='PASS': raise HTTPException(422,'本专项点检缺少已确认厂家判据，不能记录为通过')
+        elif body.actual_values or body.execution_reference:
+            raise HTTPException(422,'实际结果必须关联具体点检项')
         if not body.note.strip() or not body.recorder.strip(): raise HTTPException(422,'请填写记录人及现场说明；不适用须说明原因')
         if body.status=='PASS' and item['source_status']!='APPROVED': raise HTTPException(422,'缺少厂家已确认依据，不能记录为通过')
         for pid in body.photo_ids:
             try: photo=db.record(pid)
             except KeyError: raise HTTPException(422,'照片不存在')
             if photo['kind']!='checklist_photo' or photo['project']!=id or photo['item_id']!=body.item_id: raise HTTPException(422,'照片必须属于本清单点检项')
-        return db.add('checklist',id,{**body.model_dump(),'template_version':item['template_version'],'approval':'NOT_APPROVED'})
+        return db.add('checklist',id,{**body.model_dump(),'detail_version':'METER-COMM-1' if body.detail_key else None,'template_version':item['template_version'],'approval':'NOT_APPROVED'})
 
     @app.post('/api/plans/{id}/checklist/photos')
     async def upload(id:str,request:Request,item_id:str,filename:str):
