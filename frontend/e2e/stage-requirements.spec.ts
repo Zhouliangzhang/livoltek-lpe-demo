@@ -28,13 +28,16 @@ test('forward prompts locate missing fields; no L6 or shortcut bypass',async({pa
  await expect(page.getByRole('region',{name:'L3 作业区',exact:true})).toBeVisible()
  await page.getByRole('button',{name:/L5 系统设置/}).click()
  await page.getByLabel('简化 control_strategy',{exact:true}).fill('')
- await page.getByRole('button',{name:'02 引导式安装',exact:true}).click()
+ await page.getByRole('button',{name:'M3 调试与验证',exact:true}).click()
  await expect(page.getByRole('region',{name:'下一环节必填提示',exact:true})).toContainText('缺少计划设置')
  await page.getByRole('button',{name:'补充 EMS_MASTER.control_strategy-planned',exact:true}).click()
  await expect(page.getByLabel('EMS_MASTER.control_strategy planned',{exact:true})).toBeFocused()
  await page.getByLabel('EMS_MASTER.control_strategy planned',{exact:true}).fill('自发自用；测试计划')
  await page.getByRole('button',{name:'继续下一环节',exact:true}).click()
- await expect(page.getByRole('heading',{name:'通信接线与技术指引',exact:true})).toBeVisible()
+ await page.getByRole('button',{name:'返回 M1 保存',exact:true}).click()
+ await page.getByRole('button',{name:'保存版本',exact:true}).click()
+ await page.getByRole('button',{name:'M3 调试与验证',exact:true}).click()
+ await expect(page.getByRole('heading',{name:'零馈表与 iEMS · 分步验证',exact:true})).toBeVisible()
 })
 
 

@@ -29,6 +29,6 @@ export function stageRequirements(model:Model,stage:string):Issue[]{
  return required
 }
 export function requirementsBefore(model:Model,target:string){
- const end=target==='M2'?stageOrder.length:stageOrder.indexOf(target)
+ const end=(target==='M2'||target==='M3')?stageOrder.length:stageOrder.indexOf(target)
  return stageOrder.slice(0,end).flatMap(s=>stageRequirements(model,s))
 }

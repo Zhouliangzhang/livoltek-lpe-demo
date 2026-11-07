@@ -12,6 +12,7 @@ from .domain import ROOT, SCHEMA, pilot, validate, digest, load
 from .store import Store, now
 from .sop import seed_templates, generate
 from .installation_tracking import register_tracking
+from .commissioning import register_commissioning
 from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
 class Save(BaseModel):
@@ -63,6 +64,7 @@ def create_app(db_path=None):
     app.state.store = db
     register_tracking(app,db)
     register_checklist(app,db)
+    register_commissioning(app,db)
 
     def project(id):
         try:
