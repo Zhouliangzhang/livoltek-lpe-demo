@@ -1,6 +1,6 @@
 import type {Model,Task} from './types'
 import type {Issue} from './readinessIssues'
-export const installationStages=[['WP01','现场与系统边界'],['WP02','安装准备'],['WP04','接口与通信核对'],['WP07','上电前资料确认']]
+export const installationStages=[['WP01','现场与系统边界'],['WP02','安装准备'],['WP03','设备就位'],['WP03G','保护接地'],['WP03P','电气接线'],['WP04','接口核对'],['WP05','通信接线'],['WP06','上电前检查'],['WP07','上电前资料确认']]
 export function orderedTasks(tasks:Task[]){
  const remaining=[...tasks],ordered:Task[]=[]
  while(remaining.length){const ready=remaining.filter(t=>!t.depends_on.some(id=>remaining.some(x=>x.task_id===id)))
@@ -10,10 +10,12 @@ export function orderedTasks(tasks:Task[]){
  }
  return ordered
 }
-export const evidenceLabels:Record<string,string>={photo:'现场照片引用',installation_clearance_review:'安装空间核对记录',communication_map:'通信映射资料',test_record:'通信测试记录',approved_design_reference:'已批准设计引用',signed_checklist:'签署的检查记录',vendor_document:'厂家文件编号 / 版本',interface_map:'接口点表与核对记录',design_reference:'EPC 批准设计引用',boundary_observation:'现场边界核对记录',manual_revision:'厂家手册版本',nameplate_photo:'铭牌照片引用',installation_space_check:'安装空间核对记录'}
+export const evidenceLabels:Record<string,string>={installation_record:'现场安装记录（逐台 / 逐回路）',photo:'现场照片引用',installation_clearance_review:'安装空间核对记录',communication_map:'通信映射资料',test_record:'通信测试记录',approved_design_reference:'已批准设计引用',signed_checklist:'签署的检查记录',vendor_document:'厂家文件编号 / 版本',interface_map:'接口点表与核对记录',design_reference:'EPC 批准设计引用',boundary_observation:'现场边界核对记录',manual_revision:'厂家手册版本',nameplate_photo:'铭牌照片引用',installation_space_check:'安装空间核对记录'}
 export type MissingAction={owner:'EPC 补充'|'厂家提供';text:string;action:'evidence'|'template'|'interface'|'parameter'|'review';field?:string}
 export function missingActions(t:Task):MissingAction[]{
  return t.missing_inputs.flatMap((m):MissingAction[]=>{
+  if(m.startsWith('vendor installation: '))return [{owner:'厂家提供',text:'待厂家确认：'+m.slice(21)+'。',action:'template'}]
+  if(m.startsWith('epc installation: '))return [{owner:'EPC 补充',text:'待现场补充：'+m.slice(18)+'。',action:'evidence',field:'installation_record'}]
   if(m==='approved EPC boundary documentation')return [{owner:'EPC 补充',text:'已批准的系统边界设计，以及现场连接点、额定参数核对记录。',action:'evidence',field:'design_reference'}]
   if(m==='verified interface mapping and vendor documentation')return [{owner:'厂家提供',text:'对应设备的通信协议、接口点表和适用版本。',action:'interface'},{owner:'EPC 补充',text:'现场接口映射、接线及信号核对记录。',action:'evidence',field:'interface_map'}]
   if(m==='approved manufacturer / EPC source document')return [{owner:'厂家提供',text:'适用于本型号的安装手册或技术指导文件，注明版本及适用范围。',action:'template'},{owner:'EPC 补充',text:'与本工作包相关的批准设计及现场核对资料。',action:'evidence'}]
@@ -31,8 +33,8 @@ export function interfaceIssue(model:Model,t:Task):Issue|undefined{
 }
 export function InstallationPackages({model,tasks,onRecord,onAction}:{model:Model;tasks:Task[];onRecord:(task:Task)=>void;onAction:(task:Task,a:MissingAction)=>void}){
  const ordered=orderedTasks(tasks)
- return <section className="installationFlow" aria-label="按安装顺序的工作包"><div className="installIntro"><h2>按安装顺序准备与核对</h2><p>先确认边界，再准备安装资料，随后核对接口，最后确认上电前资料。各工作包同时遵守模板前置关系。</p><small>当前模板仅覆盖资料与接口核对；设备就位、接线、调试等具体工序尚缺受控厂家模板，不代表完整施工 SOP。</small></div><div className="installSteps">{installationStages.map(([id,name],i)=><div key={id}><b>0{i+1}</b><span>{name}<small>{tasks.filter(t=>t.work_package===id).length} 个工作包</small></span></div>)}</div>
+ return <section className="installationFlow" aria-label="按安装顺序的工作包"><div className="installIntro"><h2>按现场安装流程推进</h2><p>边界与准备 → 设备就位 → 保护接地 → 电气接线 → 接口核对与通信接线 → 上电前检查。各工作包保留前置依赖。</p><small>现场作业由 EPC 按批准设计组织。以下安装步骤为草案；厂家具体要求待确认，记录齐备不等于获准上电。</small></div><div className="installSteps">{installationStages.map(([id,name],i)=><div key={id}><b>0{i+1}</b><span>{name}<small>{tasks.filter(t=>t.work_package===id).length} 个工作包</small></span></div>)}</div>
  {ordered.map((t,i)=>{const stage=installationStages.find(s=>s[0]===t.work_package),assetId=t.task_id.startsWith('INTERFACE-')?t.task_id.slice(10):undefined,node=model.nodes.find(n=>n.device_asset_id===assetId),title=node?'第三方接口资料核对 · '+node.name:t.title
- return <article className="task card installationTask" key={t.task_id} id={'package-'+t.task_id} data-task-id={t.task_id} data-readiness={t.readiness}><header><span className="installNumber">{String(i+1).padStart(2,'0')}</span><div><small>{stage?.[1]||'其他工作包'} · 模板 v{t.template_version}</small><h3>{title}</h3></div><span className="badge amber">{t.missing_inputs.length?'待补资料':t.readiness==='BLOCKED'?'需专项确认':'仅供模拟核对'}</span></header><p>{t.instructions}</p><div className="installDependency">前置工作：{t.depends_on.length?t.depends_on.map(id=>tasks.find(x=>x.task_id===id)?.title||'前置工作包尚未生成').join('；'):'可先开展资料准备'}<span>风险：{({LOW:'低',MEDIUM:'中',HIGH:'高',SAFETY_CRITICAL:'安全关键'} as Record<string,string>)[t.risk]||'待确认'}</span></div>
+ return <article className="task card installationTask" key={t.task_id} id={'package-'+t.task_id} data-task-id={t.task_id} data-readiness={t.readiness}><header><span className="installNumber">{String(i+1).padStart(2,'0')}</span><div><small>{stage?.[1]||'其他工作包'} · 模板 v{t.template_version}</small><h3>{title}</h3></div><span className="badge amber">{t.missing_inputs.length?'待补资料':t.readiness==='BLOCKED'?'需专项确认':'仅供模拟核对'}</span></header><p>{t.instructions}</p>{!!t.installation_steps?.length&&<div className="installationSteps"><h4>现场作业内容 · 待确认流程</h4><ol>{t.installation_steps.map((step,j)=><li key={j}>{step}</li>)}</ol></div>}<div className="installDependency">前置工作：{t.depends_on.length?t.depends_on.map(id=>tasks.find(x=>x.task_id===id)?.title||'前置工作包尚未生成').join('；'):'可先开展资料准备'}<span>风险：{({LOW:'低',MEDIUM:'中',HIGH:'高',SAFETY_CRITICAL:'安全关键'} as Record<string,string>)[t.risk]||'待确认'}</span></div>
  <div className="missingColumns">{(['EPC 补充','厂家提供'] as const).map(owner=><section key={owner}><h4>{owner}</h4>{missingActions(t).filter(a=>a.owner===owner).map((a,j)=><div className="missingItem" key={j}><p>{a.text}</p><button onClick={()=>onAction(t,a)} aria-label={t.task_id+' '+owner+' '+j}>{a.action==='template'?'查看模板与依据':a.action==='interface'?'定位接口资料':a.action==='parameter'?'定位工程依据':a.action==='review'?'进入技术协同':'补充记录'} →</button></div>)}{!missingActions(t).some(a=>a.owner===owner)&&<p className="muted">当前模板未列出此方缺项，不代表现场工作已完成。</p>}</section>)}</div><footer><small>资料引用与模拟记录不自动构成批准。</small><button onClick={()=>onRecord(t)}>记录模拟结果</button></footer></article>})}</section>
 }

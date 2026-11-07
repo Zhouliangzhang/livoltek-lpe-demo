@@ -13,9 +13,15 @@ test('M2 Chinese missing inputs navigate to evidence, template, interface and en
  expect((await request.post('/api/projects',{data:{model:m,expected_revision:0}})).ok()).toBeTruthy()
  await page.goto('/');await page.getByLabel('选择项目').selectOption(m.project.project_id)
  await page.getByRole('button',{name:'02 引导式安装',exact:true}).click();await page.getByRole('button',{name:'生成安装计划',exact:true}).click()
- await expect(page.locator('.installationTask')).toHaveCount(9)
+ await expect(page.locator('.installationTask')).toHaveCount(14)
  await expect(page.locator('.installationTask').first()).toContainText('现场与系统边界')
  await expect(page.locator('.installationTask').last()).toContainText('上电前资料确认')
+ for(const id of ['POSITION','EARTH','POWER','COMMS','PREPOWER']){
+  await expect(page.locator('#package-INSTALL-'+id+' .installationSteps li')).toHaveCount(3)
+  await expect(page.locator('#package-INSTALL-'+id)).toContainText('待厂家确认')
+ }
+ await page.getByRole('button',{name:'INSTALL-POSITION EPC 补充 0',exact:true}).click()
+ await expect(page.locator('#evidence-installation_record')).toBeFocused()
  await expect(page.locator('.installationFlow')).not.toContainText('approved manufacturer')
  await page.getByRole('button',{name:'BOUNDARY-PCC_01 EPC 补充 0',exact:true}).click()
  await expect(page.locator('#evidence-design_reference')).toBeFocused()

@@ -54,8 +54,9 @@ def create_app(db_path=None):
     db = Store(db_path or os.environ.get('LPE_DB', str(ROOT / 'demo.db')))
     if not db.projects():
         db.save(pilot(), 0)
-    if not db.records('template', 'catalog'):
-        for t in seed_templates():
+    existing_templates = {t['template_id'] for t in db.records('template', 'catalog')}
+    for t in seed_templates():
+        if t['template_id'] not in existing_templates:
             db.add('template','catalog',t)
     app.state.store = db
 

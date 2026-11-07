@@ -1,5 +1,6 @@
 """Deterministic, source-versioned manufacturer guidance. Never controls equipment."""
 from .domain import load, digest
+from .installation import installation_templates
 
 def seed_templates():
     pack = load('lv01-demo.sop-rules.json')
@@ -14,7 +15,7 @@ def seed_templates():
         result.append({'template_id':rule['sop_template_id'], 'version':1, 'status':'DRAFT',
                        'title':title, 'instructions':text, 'scope_type':scope,
                        'source_document_ref':rule['source_doc_ref'], 'rule':rule, 'demo_only':True})
-    return result
+    return result + installation_templates()
 
 def matches(rule, m):
     w = rule['when']
@@ -47,6 +48,8 @@ def generate(model, revision, templates):
                        for n in model['nodes']):
                 continue
         missing = []
+        if t.get('vendor_pending'):
+            missing.extend(['vendor installation: '+t['vendor_pending'], 'epc installation: '+t['epc_pending']])
         for name in r['when'].get('required_parameter_names', []):
             if not any(p['name'] == name and p.get('approved') and p.get('reference_doc') for p in model['parameters']):
                 missing.append(f'approved parameter / source: {name}')
@@ -55,7 +58,7 @@ def generate(model, revision, templates):
         if t['status'] != 'APPROVED':
             missing.append('template approval')
         tasks.append({'task_id':r['rule_id'], 'template_id':t['template_id'], 'template_version':t['version'],
-                      'template_snapshot':t, 'title':t['title'], 'instructions':t['instructions'],
+                      'installation_steps':t.get('installation_steps',[]), 'template_snapshot':t, 'title':t['title'], 'instructions':t['instructions'],
                       'scope_type':t['scope_type'], 'task_owner':'EPC', 'execution_authority':'SIMULATION_ONLY',
                       'work_package':r['work_package'], 'risk':r['risk'], 'depends_on':r['depends_on'],
                       'evidence_requirements':r['evidence_requirements'], 'missing_inputs':missing,
@@ -83,6 +86,14 @@ def generate(model, revision, templates):
                       'template_id':'BOUNDARY-REVIEW', 'template_version':1, 'work_package':'WP01', 'risk':'LOW',
                       'depends_on':[], 'evidence_requirements':['design_reference','boundary_observation'],
                       'missing_inputs':['approved EPC boundary documentation'], 'readiness':'BLOCKED'})
+    installation_ids = {t['task_id'] for t in tasks if t['task_id'].startswith('INSTALL-')}
+    for t in tasks:
+        if t['task_id']=='INSTALL-POSITION':
+            t['depends_on']=t['depends_on']+[x['task_id'] for x in tasks if x['work_package'] in ('WP01','WP02')]
+        if t['task_id']=='INSTALL-COMMS':
+            t['depends_on']=t['depends_on']+[x['task_id'] for x in tasks if x['work_package']=='WP04']
+        if t['task_id']=='RULE-ENERGIZATION-REVIEW' and 'INSTALL-PREPOWER' in installation_ids:
+            t['depends_on']=t['depends_on']+['INSTALL-PREPOWER']
     ordered, remaining = [], tasks[:]
     ids = {t['task_id'] for t in tasks}
     for t in tasks:

@@ -6,7 +6,7 @@ export interface Asset {installed_location?:string|null;firmware_version?:string
 export interface DeviceModel {model_id:string;manufacturer:string;model_name:string;master_data_version:string;[key:string]:unknown}
 export interface Model {schema_version:string;project:{project_id:string;name:string;structure_code:string;[key:string]:unknown};baseline:{baseline_id:string;version:string;status:string;[key:string]:unknown};nodes:Node[];ports:Port[];edges:Edge[];device_assets:Asset[];device_models:DeviceModel[];view_layout:{editor:string;positions:Record<string,{x:number;y:number}>;layer_visibility:Record<Kind,boolean>};[key:string]:unknown}
 export interface Flow {available:boolean;animate:boolean;reverse:boolean;value:number|null;quality:string;timestamp:number}
-export interface Task {task_id:string;title:string;instructions:string;scope_type:string;task_owner:string;readiness:string;work_package:string;risk:string;template_id:string;template_version:number;missing_inputs:string[];depends_on:string[];evidence_requirements:string[]}
+export interface Task {installation_steps?:string[];task_id:string;title:string;instructions:string;scope_type:string;task_owner:string;readiness:string;work_package:string;risk:string;template_id:string;template_version:number;missing_inputs:string[];depends_on:string[];evidence_requirements:string[]}
 export interface Plan {id:string;revision:number;stale?:boolean;tasks:Task[];created:string}
 export interface Template {rule:Record<string,unknown>;template_id:string;version:number;title:string;instructions:string;status:string;source_document_ref:string|null;scope_type:string}
 export interface Review {id:string;target_id:string;reviewer:string;comment:string;decision:string;revision:number;created:string}
