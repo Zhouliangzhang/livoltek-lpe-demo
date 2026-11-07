@@ -2209,7 +2209,8 @@
             "master_data_version": "CI20-ASSUMPTIONS-R1",
             "template_version": "L5-CHECKLIST-1"
           }
-        }
+        },
+        "communication_bridge": true
       }
     },
     {

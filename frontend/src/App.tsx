@@ -1,3 +1,4 @@
+import {materializeTemplateSettings} from './settingsCatalog'
 import {M1} from './M1'
 import {useEffect,useState} from 'react'
 import {api, type Model,type Kind,type Flow,type Plan,type Template,type Review} from './types'
@@ -34,7 +35,7 @@ export default function App(){
  useEffect(()=>{run(async()=>{const p=await api<{id:string;name:string}[]>('/projects');setProjects(p);await load(p.find(x=>x.id===localStorage.getItem('lpe-project'))?.id||p[0].id)})},[])
  useEffect(()=>{if(!id)return;let cancelled=false;const poll=async()=>{try{const t=await api<{flows:Record<string,Flow>}>(`/projects/${id}/telemetry?scenario=${scenario}`);if(!cancelled)setFlows(t.flows)}catch{if(!cancelled)setFlows({})}};poll();const timer=setInterval(poll,3000);return()=>{cancelled=true;clearInterval(timer)}},[id,scenario])
  useEffect(()=>{if(!plan){setRecords([]);return}api<Record<string,unknown>[]>(`/plans/${plan.id}/evidence`).then(setRecords).catch(()=>setRecords([]))},[plan?.id])
- async function save(){if(!model)return;const p=await api<{model:Model;revision:number}>('/projects',{model,expected_revision:revision});setModel(p.model);setRevision(p.revision);setDirty(false);await refresh(id);setMessage('已保存不可变版本 R'+p.revision)}
+ async function save(){if(!model)return;const p=await api<{model:Model;revision:number}>('/projects',{model:materializeTemplateSettings(model),expected_revision:revision});setModel(p.model);setRevision(p.revision);setDirty(false);await refresh(id);setMessage('已保存不可变版本 R'+p.revision)}
  async function saveConnection(candidate:Model){
   setBusy(true)
   try{const p=await api<{model:Model;revision:number}>('/projects',{model:candidate,expected_revision:revision});setModel(p.model);setRevision(p.revision);setDirty(false);setIssues(null);setMessage('已保存连接与工程版本 R'+p.revision);try{await refresh(p.model.project.project_id)}catch{setMessage('连接已保存为 R'+p.revision+'；历史列表暂未刷新。')}}finally{setBusy(false)}

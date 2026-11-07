@@ -10,7 +10,8 @@ CATALOG = json.loads((Path(__file__).resolve().parents[1] / 'config/l5-catalog.j
 DEFINITIONS = {p['key']: p for p in CATALOG['parameters']}
 
 def applicable(model, node):
-    domains = {p['domain'] for p in model['ports'] if p['node_id'] == node['node_id']}
+    connected = {pid for e in model['edges'] if e['edge_type'] == 'COMMUNICATION' for pid in (e['from_port_id'], e['to_port_id'])}
+    domains = {p['domain'] for p in model['ports'] if p['node_id'] == node['node_id'] and p['port_id'] in connected}
     modes, features = set(model['project']['operation_modes']), set(model['project']['energy_features'])
     return [d for d in DEFINITIONS.values()
             if (not d['node_types'] or node['node_type'] in d['node_types'])
@@ -18,7 +19,7 @@ def applicable(model, node):
             and (not d['modes'] or modes.intersection(d['modes']))
             and (not d['features'] or features.intersection(d['features']))]
 
-def validate_settings(model):
+def _validate_settings(model):
     errors, warnings = [], []
     assets = {a['asset_id']: a for a in model['device_assets']}
     models = {d['model_id']: d for d in model['device_models']}
@@ -67,3 +68,21 @@ def validate_settings(model):
             if type(low) in (int,float) and type(high) in (int,float) and low > high:
                 errors.append(f'L5 {node["node_id"]}.{phase}: SOC minimum exceeds maximum')
     return errors,warnings
+
+
+def validate_settings(model):
+    errors, warnings = _validate_settings(model)
+    nodes = {n['node_id']: n for n in model['nodes']}
+    for port in model['ports']:
+        records = port.get('attributes', {}).get('l5_settings')
+        if records is None:
+            continue
+        node = nodes.get(port['node_id'])
+        if not node:
+            continue
+        scoped = dict(model, nodes=[dict(node, node_id=port['port_id'], attributes={'l5_settings': records})],
+                      ports=[dict(port, node_id=port['port_id'])])
+        ee, ww = _validate_settings(scoped)
+        errors.extend(ee)
+        warnings.extend(ww)
+    return errors, warnings

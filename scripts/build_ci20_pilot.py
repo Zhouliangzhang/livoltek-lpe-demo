@@ -79,6 +79,7 @@ def build():
      edge(port(array,'DC','DC'),port(id,'DC_AGGREGATE','DC'))
  device('EMS_MASTER','EMS','iEMS 系统控制器 · 统一控制20台','EMS-USER20','控制柜',True,scope='Single iEMS for 10 PV + 10 BESS confirmed by user; delivered model/firmware/point map pending')
  device('NET_01','OTHER','工业交换机 · 24口候选','SWITCH','控制柜')
+ next(n for n in m['nodes'] if n['node_id']=='NET_01')['attributes']['communication_bridge']=True
  device('METER_PCC','METER','PCC 零馈表 · CT式候选','METER','PCC计量室',measured_edge='CI-003',import_sign='positive',external_meter_compatibility='pending; HXEM100 integrated metering alternative requires review')
  device('UPS_01','OTHER','控制电源 UPS · 候选','UPS','控制柜')
  node('QF_AUX','BREAKER','控制柜辅助电源开关 · 待选')

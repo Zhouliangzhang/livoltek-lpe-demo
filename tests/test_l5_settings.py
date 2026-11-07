@@ -38,3 +38,16 @@ def test_mode_change_keeps_old_values_as_inactive():
     assert 'charge_schedule' not in {d['key'] for d in applicable(m,node)}
     assert any('no longer applicable' in w for w in validate(m)['warnings'])
     assert node['attributes']['l5_settings']['charge_schedule']['planned']=='reference-only'
+
+
+def test_disconnected_interfaces_do_not_generate_communication_requirements():
+    m=pilot();m['edges']=[]
+    node=next(n for n in m['nodes'] if n['node_id']=='BESS_01')
+    assert not any(d['group']=='通信' for d in applicable(m,node))
+
+
+def test_port_settings_validate_types_and_version():
+    m=pilot();record=entry(m,'ip_address','192.0.2.1')
+    port=next(p for p in m['ports'] if p['node_id']=='BESS_01')
+    port.setdefault('attributes',{})['l5_settings']={'baud_rate':dict(record,planned='bad')}
+    assert any(port['port_id']+'.baud_rate' in e for e in validate(m)['errors'])

@@ -1,4 +1,5 @@
 import type {Model} from './types'
+import {communicationBuses,sharedKeys} from './communication'
 import {generateSettings} from './settingsCatalog'
 import {projectFramework} from './projectTopology'
 export type Issue={id:string;category:'缺失信息'|'设置冲突'|'待厂家确认';layer:string;object:string;message:string;action:string;nodeId?:string;label?:string;rowId?:string}
@@ -25,6 +26,20 @@ export function readinessIssues(model:Model,result?:Validation|null):Issue[]{
   if(r.stale)add({...base,id:r.id+'-stale',category:'设置冲突',message:'型号或清单版本已变化，旧设置不能直接沿用。',action:'保留旧记录并重新确认'})
   if(r.record?.planned!=null&&r.record.actual!=null&&r.record.planned!==''&&r.record.actual!==''&&r.record.planned!==r.record.actual)add({...base,id:r.id+'-difference',category:'设置冲突',message:`计划值 ${r.record.planned} 与现场值 ${r.record.actual} 不一致；需核对偏差原因。`,action:'核对现场设置',label:r.id+' actual'})
   add({...base,id:r.id+'-evidence',category:'待厂家确认',message:'缺少已核验的对应型号厂家依据；填写文档引用不等于确认适用性。',action:'补充厂家文档并协同确认',label:r.id+' reference'})
+ }
+ const commRows=generateSettings(model).filter(r=>r.definition.group==='通信')
+ for(const bus of communicationBuses(model)){
+  const members=commRows.filter(r=>bus.ports.some(p=>r.portId?p.port_id===r.portId:p.node_id===r.nodeId&&p.domain==='ETHERNET'))
+  for(const phase of ['planned','actual'] as const){
+   for(const key of [...sharedKeys[bus.domain],bus.domain==='RS485'?'station_address':bus.domain==='CAN'?'can_node_id':'ip_address']){
+    const rr=members.filter(r=>r.definition.key===key&&!r.stale&&r.record?.[phase]!=null&&r.record?.[phase]!=='')
+    const shared=sharedKeys[bus.domain].includes(key),values=rr.map(r=>String(r.record![phase]).trim().toLowerCase())
+    if(shared?new Set(values).size>1:new Set(values).size<values.length){
+     const row=rr[0]
+     add({id:bus.id+'-'+key+'-'+phase,category:'设置冲突',layer:'L5',object:bus.name,message:shared?'同一总线的通信格式不一致，请核对各设备。':'同一通信网络的设备地址重复，请核对。',action:'核对通信设置',nodeId:row.nodeId,rowId:row.id,label:row.id+' '+phase})
+    }
+   }
+  }
  }
  const parameters=model.parameters as {parameter_id:string;name:string;planned:{value:number;unit:string}|null;actual:{value:number;unit:string}|null;reference_doc?:string}[]
  for(const p of parameters){

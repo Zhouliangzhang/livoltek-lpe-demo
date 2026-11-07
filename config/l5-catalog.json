@@ -112,7 +112,7 @@
     },
     {
       "key": "parity",
-      "label": "校验方式",
+      "label": "串口校验（无 / 奇 / 偶）",
       "group": "通信",
       "type": "text",
       "unit": "",
