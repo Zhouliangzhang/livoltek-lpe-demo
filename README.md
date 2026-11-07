@@ -90,3 +90,12 @@ The independent React app now opens directly to the six-layer engineering worksp
 - Validation: TypeScript/Vite build, 19 backend tests, browser workflows covering malformed scan input, duplicate SN rejection, both intake paths, invalid electrical connections, persistence, telemetry states and M2 regression.
 
 Preview: http://127.0.0.1:8000/ . Start with the existing `scripts/start.ps1` instructions above.
+
+### M1 layout revision: layered workflow and read-only generated topology
+
+The top project layout is retained. The former three-column editor and standalone intake strip have been replaced by a full-width system overview followed by L2-L6 workflow tabs.
+
+- L2 embeds Add Electrical Structure. L3 embeds LIVOLTEK scan intake and third-party manual intake. L4 contains recorded ports/connections; L5 shows configuration comparison; L6 contains rule checks, review, provenance and telemetry settings.
+- Topology geometry is automatically derived from the recorded electrical graph, rooted at PCC objects. Objects without a recorded electrical path are displayed separately. It does not infer or invent connections.
+- The X6 canvas has no mutation callbacks, selection editing, node dragging, port dragging or panning. Only zooming/fit-to-view is enabled. Zoom does not dirty the engineering model. Existing saved manual layout coordinates are ignored by this view.
+- Browser regression checks cover a failed node-drag attempt leaving geometry unchanged, zoom changing the viewport without enabling Save, both intake workflows, SN rejection, connection validation, persistence and M2 regression.
