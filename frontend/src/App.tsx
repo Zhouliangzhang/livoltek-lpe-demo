@@ -1,5 +1,6 @@
 import {ConfigurationDelivery,WorkbenchHandover,type Environment} from './ConfigurationDelivery'
 import {Commissioning} from './Commissioning'
+import {FleetCommissioning} from './FleetCommissioning'
 import {LegacyInspectionRecords} from './LegacyInspectionRecords'
 import {CommunicationGuide} from './CommunicationGuide'
 import {SystemChecklist} from './SystemChecklist'
@@ -115,7 +116,7 @@ export default function App(){
    {tab==='M2'&&<>
     {dirty?<div className="m2UpdateNotice" role="status"><span>模型有未保存修改。请先回到 M1 保存，再更新调试依据；原记录保留。</span><button onClick={()=>setTab('M1')}>返回 M1 保存</button></div>:plan?.stale&&<div className="m2UpdateNotice" role="status"><span>当前模型为 R{revision}，调试仍依据 R{plan.revision}。更新后将生成新清单，原记录保留在历史清单中，不自动沿用检查结论。</span><button disabled={busy} onClick={()=>void generateChecklist()}>更新调试依据</button></div>}
     {checklistError&&<div className="m2UpdateNotice" role="alert"><span>清单准备失败：{checklistError}</span><button disabled={busy||dirty} onClick={()=>void generateChecklist()}>重试</button></div>}
-    {loadedProject===id&&plan?<><Commissioning onSupport={text=>{setSelected(id);setComment(text);setTab('M4')}} environment={environment} key={plan.id+environment} planId={plan.id} disabled={dirty||!!plan.stale} locate={issue=>{setExternalIssue(issue);setTab('M1')}}/><details className="m2Legacy"><summary>历史 M2 点检记录 · 只读</summary><SystemChecklist planId={plan.id} disabled={true} model={model} locate={issue=>{setExternalIssue(issue);setTab('M1')}}/></details><LegacyInspectionRecords planId={plan.id} tasks={plan.tasks}/>
+    {loadedProject===id&&plan?<><FleetCommissioning onSupport={text=>{setSelected(id);setComment(text);setTab('M4')}} environment={environment} key={'fleet'+plan.id+environment} planId={plan.id} disabled={dirty||!!plan.stale} locate={issue=>{setExternalIssue(issue);setTab('M1')}}/><Commissioning onSupport={text=>{setSelected(id);setComment(text);setTab('M4')}} environment={environment} key={plan.id+environment} planId={plan.id} disabled={dirty||!!plan.stale} locate={issue=>{setExternalIssue(issue);setTab('M1')}}/><details className="m2Legacy"><summary>历史 M2 点检记录 · 只读</summary><SystemChecklist planId={plan.id} disabled={true} model={model} locate={issue=>{setExternalIssue(issue);setTab('M1')}}/></details><LegacyInspectionRecords planId={plan.id} tasks={plan.tasks}/>
      <details className="m2Legacy"><summary>旧版执行记录 · 只读 ({records.length})</summary>{records.map(r=><p key={String(r.id)}>{String(r.task_id)} · {String(r.result)} · {String(r.note)} · {String(r.reviewer)}</p>)}</details><details className="card"><summary>历史计划 ({plans.length})</summary>{plans.map(p=><p key={p.id}>R{p.revision} · {p.created} · {p.tasks.length} 项 · {p.stale?'已过期':'同工程模型'}</p>)}</details></>:<section className="empty card">{dirty?'请先保存 M1 模型。':checklistError?'请重试准备清单。':'正在根据已保存的 M1 模型自动准备调试依据…'}</section>}</>}
    {tab==='M3'&&<WorkbenchHandover/>}
    {tab==='M4'&&<section className="configurationDelivery"><small>M4 / FIELD SERVICE</small><h2>现场服务与厂家协同</h2><p>保留现场问题和厂家支持意见。当前协同记录仅保存在演示工作台，尚未接通厂家服务系统，不会自动发送给厂家。</p></section>}
