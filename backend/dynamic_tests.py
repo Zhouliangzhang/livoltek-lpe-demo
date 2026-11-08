@@ -11,10 +11,11 @@ class DynamicCommand(BaseModel):
     mode:Literal['SIMULATION','REAL']
     scenario:Literal['load_step','pv_fluctuation','charge_limited']
     delay_s:Literal[0.5,1,2,3]=1
-    fault:Literal['none','pv_stuck','bess_block','bess_comm_loss','meter_comm_loss','meter_invalid']='none'
+    fault:Literal['none','pv_stuck','bess_block','bess_comm_loss','meter_comm_loss','meter_invalid','meter_pv_reject']='none'
     fault_node:str|None=None
     mitigation:bool=False
     recover:bool=False
+    support_capacity:Literal['limited','available']='limited'
 
 def approach(actual,target,rate):
     return actual+max(-rate*DT,min(rate*DT,target-actual))
@@ -23,7 +24,7 @@ def dynamic_simulate(model,body):
     preflight=simulate(model,Command(mode='SIMULATION',scenario='surplus'))
     base={'scenario':body.scenario,'title':SCENARIOS[body.scenario],'mode':'SIMULATION','source':'SIMULATOR','version':'M2-DYNAMIC-1','field_result':None,'manufacturer_basis':'PENDING','trace':[],'events':[],'issues':[], 'metrics':None}
     if preflight['status']=='BLOCKED':return {**base,'status':'BLOCKED','issues':[{**i,'time':0,'route':[]} for i in preflight['issues']]}
-    if body.fault in ('meter_comm_loss','meter_invalid'):
+    if body.fault in ('meter_comm_loss','meter_invalid','meter_pv_reject'):
         from .meter_degradation import simulate_meter
         return simulate_meter(model,body,preflight)
     p=participants(model);pv_nodes=p['pv'];bess_nodes=p['bess'];np=len(pv_nodes);nb=len(bess_nodes)
