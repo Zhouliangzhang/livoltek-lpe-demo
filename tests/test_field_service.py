@@ -55,6 +55,10 @@ def test_m4_remedy_requires_approval_and_preserves_evidence(tmp_path):
     assert c.post(url+'/remedy',json=req).status_code==409
     for i in range(1,6):assert c.post(url+'/diagnose',json=dict(mode='SIMULATION',step=i)).status_code==200
     original=c.get(url+'?mode=SIMULATION').json()['steps']
+    preview=c.get(url+'/report?mode=SIMULATION');assert preview.status_code==200,preview.text
+    assert not preview.json()['current']['can_close']
+    first=c.post(url+'/report',json={'mode':'SIMULATION'}).json()
+    assert c.post(url+'/close',json={'mode':'SIMULATION'}).status_code==409
     assert c.post(url+'/remedy',json=req).status_code==200
     assert c.post(url+'/remedy',json={**req,'step':3}).status_code==409
     assert c.post(url+'/remedy',json={**req,'step':2}).status_code==422
@@ -67,5 +71,13 @@ def test_m4_remedy_requires_approval_and_preserves_evidence(tmp_path):
     d=c.get(url+'?mode=SIMULATION').json(); assert d['steps']==original and len(d['remedy'])==6
     assert c.post(url+'/remedy',json={**req,'mode':'REAL'}).status_code==404
     assert c.app.state.store.record(pack['id'])==pack
+    report=c.post(url+'/report',json={'mode':'SIMULATION'}).json()
+    assert report['id']!=first['id'] and report['simulation_recovered'] and not report['field_repaired']
+    assert len(report['evidence'])==11 and report['pending'] and not report['can_close']
+    assert c.post(url+'/report',json={'mode':'SIMULATION'}).json()['id']==report['id']
+    assert c.app.state.store.record(first['id'])==first
+    assert len(c.get(url+'/report?mode=SIMULATION').json()['versions'])==2
+    assert c.get(url+'/report?mode=REAL').status_code==404
+    assert c.post(url+'/close',json={'mode':'SIMULATION'}).status_code==409
     current=c.app.state.store.get(pack['project']);c.app.state.store.save(current['model'],current['revision'])
     assert c.post(url+'/remedy',json=req).status_code==409

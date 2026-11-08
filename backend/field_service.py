@@ -152,3 +152,38 @@ def register_field_service(app,db):
         if body.step==5:evidence.update(samples=[dict(reference_kw=p,raw=p/20,ct_pt_multiplier=20,converted_kw=p,unit='kW',direction='进口为正 / 出口为负',valid=True) for p in (40,0,-20)],pass_rule='仅演练：正、零、负三点换算一致；倍率20并非本项目批准参数')
         if body.step==6:evidence.update(actor=body.actor.strip(),virtual_seconds=60,stable_required_seconds=60,samples=[dict(t_seconds=t,communication_valid=True,meter_valid=True,alarm=False) for t in (10,20,30,40,50,60)],pass_rule='仅演练：连续60秒数据有效；异常须重新计时，此场景无注入复发',control_released=False)
         return db.add_once('service_remedy',cid,dict(step=body.step,title=titles[body.step-1],summary=descriptions[body.step-1],mode=body.mode,source='SIMULATOR',manufacturer_basis='PENDING',field_repaired=False,field_result=None,physical_actions=False,simulation_recovered=body.step==6,status='模拟恢复已确认' if body.step==6 else '模拟已记录',evidence=evidence),digest(dict(case=cid,remedy_step=body.step)))
+
+    def report_content(project,cid,mode):
+        c=get_case(project,cid,mode);ds=records(c)
+        rs=sorted(db.records('service_remedy',cid),key=lambda r:r['step'])
+        support=db.records('service_support',cid)
+        pending=[]
+        def issue(key,text,owner,stage,target):pending.append(dict(id=key,text=text,owner=owner,stage=stage,target=target,status='待处理',blocks_close=True))
+        for i,title in enumerate(TITLES,1):
+            if not any(r['step']==i for r in ds):issue('diagnosis-'+str(i),'尚未完成：'+title,'EPC / 厂家联合排查',1,'diagnosis-'+str(i))
+        for i,title in enumerate(['修正方案','方案批准','执行与读回','通信复测','计量复测','恢复确认'],1):
+            if not any(r['step']==i for r in rs):issue('remedy-'+str(i),'尚未完成：'+title,'EPC / 授权工程师',2,'remedy-'+str(i))
+        for i,title in enumerate(['型号/固件适用点表与地址修改方法','读回生效规则及通信超时判据','CT/PT、功率方向及计量误差判据','恢复稳定时长及控制恢复规程'],1):
+            issue('manufacturer-'+str(i),title+'待厂家确认','厂家技术支持',1,'service-support')
+        if not ds or not ds[-1].get('conclusion') or ds[-1]['conclusion']['category'] in ('UNCONFIRMED','PRODUCT_SUSPECTED'):
+            issue('root-cause','根因尚未确认或需厂家进一步验证','EPC / 厂家联合排查',1,'diagnosis-5')
+        stale=db.get(project)['revision']!=c['current_revision']
+        if stale:issue('stale','受理后工程版本已变化，需重新建立诊断上下文','EPC',0,'service-intake')
+        issue('field-repair','未取得现场批准、实际执行、通信/计量复测及恢复确认；模拟证据不可替代','EPC / 授权现场工程师',2,'service-remedy')
+        evidence=[dict(id=r['id'],title=r['title'],created=r['created'],stage=stage,target=('diagnosis-' if stage==1 else 'remedy-')+str(r['step']),source=r['source'],summary=r.get('observation',r.get('summary','')),record=deepcopy(r)) for stage,items in [(1,ds),(2,rs)] for r in items]
+        return dict(case_id=cid,mode=mode,source='SIMULATOR' if mode=='SIMULATION' else 'FIELD_PREPARATION',symptom=c['symptom'],occurred_at=c['occurred_at'],reporter=c['reporter'],device=c['device'],device_id=c['device_id'],package_id=c['package_id'],baseline_hash=c['baseline_hash'],baseline_revision=c['baseline_revision'],intake_revision=c['current_revision'],current_revision=db.get(project)['revision'],changes=c['changes'],root_cause=ds[-1].get('conclusion') if ds else None,evidence=evidence,original_case=deepcopy(c),collaboration=deepcopy(support),pending=pending,simulation_recovered=any(r.get('simulation_recovered') for r in rs),field_repaired=False,can_close=False,service_status='OPEN',stale=stale,manufacturer_basis='PENDING',warranty='未判定')
+
+    @app.get('/api/projects/{project}/service/{cid}/report')
+    def service_report(project:str,cid:str,mode:Mode='SIMULATION'):
+        current=report_content(project,cid,mode)
+        return dict(current=current,versions=db.records('service_report',cid))
+
+    @app.post('/api/projects/{project}/service/{cid}/report')
+    def freeze_service_report(project:str,cid:str,body:Support):
+        content=report_content(project,cid,body.mode)
+        return db.add_once('service_report',cid,content,digest(dict(kind='service-report-v1',content=content)))
+
+    @app.post('/api/projects/{project}/service/{cid}/close')
+    def close_service(project:str,cid:str,body:Support):
+        report=report_content(project,cid,body.mode)
+        raise HTTPException(409,dict(message='服务单保持打开：未完成项或待确认依据未解决，模拟恢复不能作为现场关单依据',pending=report['pending']))
