@@ -78,6 +78,7 @@ def control_context(db,id,sid,mode):
             def latest(kind):return next((r for r in db.records(kind,sid) if r['mode']==mode),None)
             pv=latest('pv_communication');bess=latest('bess_communication');candidate=latest('configuration_readback')
             if complete['current'] and complete['record']['status']=='PASS' and pv and bess and candidate and not pv['failed'] and not bess['failed'] and pv['pcc_evidence_id']==complete['record']['id'] and bess['pv_evidence_id']==pv['id'] and candidate['bess_evidence_id']==bess['id'] and pv['model_hash']==bess['model_hash']==candidate['model_hash']==p['engineering_hash'] and not any(candidate['counts'].get(k,0) for k in ('DIFFERENCE','UNREAD','UNIT_MISMATCH','TYPE_MISMATCH')):cfg=candidate
+    if s and s.get('m1_basis') and not s['m1_basis'].get('control_allowed'):cfg=None
     stale=digest(db.get(p['project'])['model'])!=p['engineering_hash']
     groups=control_inventory(p['system_context_baseline'],s['route']['ems']['node_id'] if s else None)
     return p,s,groups,cfg,pv,stale

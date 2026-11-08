@@ -17,6 +17,7 @@ BASIS=[
  {'title':'现场独立参照','missing':'PCC覆盖范围、CT/PT实物确认、参考仪表及同期读数记录','owner':'EPC 现场工程师','layer':'L5'}]
 
 class Start(BaseModel):
+    basis_id:str=Field(default="",max_length=100)
     mode:Literal['SIMULATION','REAL']
     edge_id:str
     acknowledged:bool=False
@@ -113,7 +114,15 @@ def register_meter_workflow(app,db):
         route=next((r for r in routes if r['edge_id']==body.edge_id),None)
         if route is None:raise HTTPException(422,'缺少零馈表与 iEMS 直接通信连接，请在 M1 补充')
         if route['meter']['domain']!=route['ems']['domain']:raise HTTPException(422,'两端通信域不一致，请在 M1 修正')
-        return db.add('meter_session',id,{**body.model_dump(), **freeze(p,m,route,body), 'model_hash':p['engineering_hash'],'revision':p['revision'],'route':route,'source':'SIMULATOR' if body.mode=='SIMULATION' else 'FIELD_PREPARATION','binding_status':'SIMULATED' if body.mode=='SIMULATION' else 'UNVERIFIED','manufacturer_basis':'PENDING','version':'M2-SEQUENCE-1'})
+        inherited={}
+        if body.basis_id:
+            from .m1_handoff import checked_package
+            inherited=checked_package(db,p['project'],body.basis_id,body.mode)
+            if inherited['source_revision']!=p['revision']:raise HTTPException(409,'调试清单与配置引用包版本不一致')
+            snap=inherited['baseline']['snapshot']
+            if route['ems']['node_id']!=snap['scope']['domain']['controller_id'] or route['meter']['node_id'] not in snap['devices']:raise HTTPException(409,'调试设备不属于引用包范围')
+            if not any(e['edge_type']=='COMMUNICATION' and {e['from_port_id'],e['to_port_id']}=={route['meter']['port_id'],route['ems']['port_id']} for e in snap['connections'].values()):raise HTTPException(409,'调试路径与冻结连接不一致')
+        return db.add('meter_session',id,{'m1_basis':inherited, **body.model_dump(), **freeze(p,m,route,body), 'model_hash':p['engineering_hash'],'revision':p['revision'],'route':route,'source':'SIMULATOR' if body.mode=='SIMULATION' else 'FIELD_PREPARATION','binding_status':'SIMULATED' if body.mode=='SIMULATION' else 'UNVERIFIED','manufacturer_basis':'PENDING','version':'M2-SEQUENCE-1'})
     def run_id(session_id,request_id):
         return digest({'session':session_id,'request':request_id})
     @app.get('/api/plans/{id}/meter-workflow/{session_id}/runs/{request_id}')
