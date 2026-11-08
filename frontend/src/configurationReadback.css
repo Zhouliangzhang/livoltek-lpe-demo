@@ -1,0 +1,5 @@
+.configurationReadback .mwTable td { vertical-align:top; line-height:1.6; }
+.configurationReadback .mwTable td small { display:block; margin-top:5px; color:#71817c; font-size:12px; line-height:1.5; }
+.configurationReadback .mwTable th:first-child { width:22%; }
+.configurationReadback .mwTable th:nth-child(5) { width:25%; }
+.configurationReadback .mwTable td b { font-weight:600; }

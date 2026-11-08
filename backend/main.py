@@ -20,6 +20,7 @@ from .commissioning import register_commissioning
 from .meter_workflow import register_meter_workflow
 from .pv_communication import register_pv_communication
 from .bess_communication import register_bess_communication
+from .configuration_readback import register_configuration_readback
 from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
 class Save(BaseModel):
@@ -75,6 +76,7 @@ def create_app(db_path=None):
     register_meter_workflow(app,db)
     register_pv_communication(app,db)
     register_bess_communication(app,db)
+    register_configuration_readback(app,db)
     register_workbench(app,db)
     register_fleet(app,db)
     register_system_tests(app,db)
