@@ -505,6 +505,73 @@
       "features": [],
       "min": 0,
       "max": 100
+    },
+    {
+      "key": "ct_ratio",
+      "label": "CT 一次/二次倍率",
+      "group": "计量",
+      "type": "number",
+      "unit": "倍",
+      "node_types": [
+        "METER"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [],
+      "min": 1e-06
+    },
+    {
+      "key": "pt_ratio",
+      "label": "PT 一次/二次倍率",
+      "group": "计量",
+      "type": "number",
+      "unit": "倍",
+      "node_types": [
+        "METER"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": [],
+      "min": 1e-06
+    },
+    {
+      "key": "phase_sequence",
+      "label": "计量相序",
+      "group": "计量",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "METER"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "measurement_scope",
+      "label": "PCC 计量覆盖范围",
+      "group": "计量",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "METER"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
+    },
+    {
+      "key": "import_direction",
+      "label": "购电功率符号约定",
+      "group": "计量",
+      "type": "text",
+      "unit": "",
+      "node_types": [
+        "METER"
+      ],
+      "domains": [],
+      "modes": [],
+      "features": []
     }
   ]
 }

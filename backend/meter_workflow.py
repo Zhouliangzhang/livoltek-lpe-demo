@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from .domain import digest
 from .session_scope import preflight, freeze
 from .iems_selfcheck import selfcheck, SCENARIOS
+from .meter_detail import enrich, EXTRA
 
 ORDER=['selfcheck','route','identity','quality','reference','stability','complete']
 TITLES=['iEMS 自检与控制权','连接与通信配置','目标电表识别','计量数据质量','方向倍率与独立参照','连续有效计量','结束验证与证据封存']
@@ -34,6 +35,8 @@ class Run(BaseModel):
     request_id:str|None=Field(default=None,min_length=1,max_length=100,pattern=r'^[A-Za-z0-9_-]+$')
 
 ALLOWED={'selfcheck':SCENARIOS,'route':['normal'],'identity':['normal','timeout','wrong_identity'],'quality':['normal','stale','frozen','bad','scale'],'reference':['normal','reverse','scale'],'stability':['normal','gap','stale'],'complete':['normal']}
+
+for step,scenarios in EXTRA.items():ALLOWED[step]+=scenarios
 
 def states(records):
     output=[];parent=None;valid=True
@@ -138,7 +141,8 @@ def register_meter_workflow(app,db):
         if body.scenario not in ALLOWED[body.step]:raise HTTPException(422,'此故障场景不适用于本步骤')
         progress=states(db.records('meter_run',s['id']));idx=ORDER.index(body.step)
         if not progress[idx]['unlocked']:raise HTTPException(409,'前置步骤未通过或已失效，请按调试顺序执行')
-        result=selfcheck(s,body.scenario) if body.step=='selfcheck' else simulate(body.step,body.scenario,s['route'])
+        result=selfcheck(s,body.scenario) if body.step=='selfcheck' else simulate(body.step,'normal' if body.scenario in EXTRA.get(body.step,[]) else body.scenario,s['route'])
+        if body.step!='selfcheck':result=enrich(result,body.step,body.scenario,m,s['route'])
         if body.step=='complete':result['evidence_ids']=[state['record']['id'] for state in progress[:idx]]
         record={**result,**body.model_dump(),'model_hash':s['model_hash'],'edge_id':s['edge_id'],'predecessor_id':progress[idx-1]['record']['id'] if idx else None}
         if body.request_id:

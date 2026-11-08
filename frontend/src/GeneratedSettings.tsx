@@ -5,7 +5,7 @@ import {generateSettings,settingsSummary,settingsVersion,updateSetting,resetSett
 export function GeneratedSettings({model,change}:{model:Model;change:(m:Model)=>void}){
  const [device,setDevice]=useState(''),[error,setError]=useState('')
  const summary=settingsSummary(model),rows=generateSettings(model).filter(r=>!device||r.nodeId===device)
- const groups=['EMS 控制策略','储能运行']
+ const groups=['EMS 控制策略','储能运行','计量']
  const devices=[...new Map(summary.rows.map(r=>[r.nodeId,r])).values()]
  function field(row:GeneratedSetting,phase:'planned'|'actual'){
   const d=row.definition,numeric=['number','integer'].includes(d.type)
