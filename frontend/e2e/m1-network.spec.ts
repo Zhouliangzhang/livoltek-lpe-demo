@@ -1,0 +1,9 @@
+import {test,expect} from '@playwright/test'
+test('Step06 preserves scope, follows device-port order, and renders one iEMS',async({page})=>{
+ await page.goto('/');await page.getByLabel('本次操作人').fill('通信工程师');await page.getByRole('button',{name:'确认上下文，进入步骤02'}).click();await page.getByRole('button',{name:'06 通信与控制关系',exact:true}).click();
+ await page.getByRole('button',{name:/编辑网络关系 /}).first().click();await expect(page.getByLabel('通信起点设备')).not.toHaveValue('');await expect(page.getByLabel('通信起点端口')).not.toHaveValue('');await page.getByLabel('通信厂家依据').fill('SIM-INTERFACE-01');await page.getByRole('button',{name:'保存关系并更新拓扑'}).click();await expect(page.getByRole('status').filter({hasText:'模拟关系已保存'})).toBeVisible();
+ await page.reload();await page.getByRole('button',{name:'06 通信与控制关系',exact:true}).click();await page.getByRole('button',{name:/编辑网络关系 /}).first().click();await expect(page.getByLabel('通信厂家依据')).toHaveValue('SIM-INTERFACE-01');await page.getByRole('button',{name:'取消编辑'}).click();
+ await page.getByRole('button',{name:'逻辑控制关系',exact:true}).click();await page.getByRole('button',{name:/编辑网络关系 /}).first().click();await expect(page.getByLabel('通信终点端口')).not.toHaveValue('');await expect(page.getByText('规划通信承载路径',{exact:true})).toBeVisible();await page.getByLabel('关系用途').fill('测试控制关系');await page.getByRole('button',{name:'保存关系并更新拓扑'}).click();await expect(page.getByRole('status').filter({hasText:'模拟关系已保存'})).toBeVisible();
+ await expect(page.getByTestId('network-topology').locator('[data-cell-id^="EMS_"]')).toHaveCount(1);
+ await page.getByLabel('选择 iEMS 环境').selectOption('REAL');await page.getByLabel('本次操作人').fill('现场工程师');await page.getByRole('button',{name:'确认上下文，进入步骤02'}).click();await page.getByRole('button',{name:'06 通信与控制关系',exact:true}).click();await page.getByRole('button',{name:/编辑网络关系 /}).first().click();await expect(page.getByLabel('通信厂家依据')).toHaveValue('');
+})

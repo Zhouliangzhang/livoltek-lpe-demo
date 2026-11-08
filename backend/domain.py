@@ -7,6 +7,7 @@ import json
 from .l5_settings import validate_settings
 from .m1_identity import identity_errors
 from .m1_electrical import DRAFT_SCHEMA, electrical_errors
+from .m1_network import NETWORK_SCHEMA, network_errors
 from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
@@ -25,6 +26,8 @@ SCHEMA['properties']['project']['properties']['system_boundary'] = json.loads((P
 
 SCHEMA['properties']['project']['properties']['electrical_drafts'] = DRAFT_SCHEMA
 
+SCHEMA['properties']['project']['properties']['network_drafts'] = NETWORK_SCHEMA
+
 def digest(model):
     data = copy.deepcopy(model)
     for key in ('view_layout', 'baseline', 'review_records'):
@@ -36,7 +39,7 @@ def validate(model):
               Draft202012Validator(SCHEMA, format_checker=FormatChecker()).iter_errors(model)]
     if errors:
         return {'valid': False, 'errors': errors, 'warnings': []}
-    errors += legacy.semantic_errors(model) + legacy.system_semantic_errors(model) + identity_errors(model) + electrical_errors(model)
+    errors += legacy.semantic_errors(model) + legacy.system_semantic_errors(model) + identity_errors(model) + electrical_errors(model) + network_errors(model)
     warnings = []
     sets = {}
     for collection, key in [('nodes','node_id'), ('ports','port_id'), ('edges','edge_id'),
