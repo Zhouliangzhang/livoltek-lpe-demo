@@ -44,3 +44,28 @@ def test_m4_categories_changes_and_stale_context(tmp_path):
     assert c.get(url+'?mode=SIMULATION').json()['stale']
     assert c.post(url+'/diagnose',json={'mode':'SIMULATION','step':5}).status_code==409
     assert db.record(pack['id'])==pack
+
+
+def test_m4_remedy_requires_approval_and_preserves_evidence(tmp_path):
+    c,base,s,body,report=setup14(tmp_path)
+    pack=c.post(base+'/handover',json={**body,'report_id':report['id'],'prepared_by':'EPC','acknowledged':True}).json()
+    root=f'/api/projects/{pack["project"]}/service'
+    case=c.post(root,json=dict(mode='SIMULATION',package_id=pack['id'],device_id='METER_PCC',reporter='EPC',symptom='失联',occurred_at='2026-11-09',safe_readonly=True,request_id='remedy')).json()
+    url=root+'/'+case['id']; req=dict(mode='SIMULATION',step=1)
+    assert c.post(url+'/remedy',json=req).status_code==409
+    for i in range(1,6):assert c.post(url+'/diagnose',json=dict(mode='SIMULATION',step=i)).status_code==200
+    original=c.get(url+'?mode=SIMULATION').json()['steps']
+    assert c.post(url+'/remedy',json=req).status_code==200
+    assert c.post(url+'/remedy',json={**req,'step':3}).status_code==409
+    assert c.post(url+'/remedy',json={**req,'step':2}).status_code==422
+    for i in range(2,7):
+        r=c.post(url+'/remedy',json={**req,'step':i,'actor':'EPC demo','acknowledged':True})
+        assert r.status_code==200,r.text
+    final=r.json(); assert final['simulation_recovered'] and final['field_repaired'] is False
+    assert final['manufacturer_basis']=='PENDING' and len(final['evidence']['samples'])==6
+    assert c.post(url+'/remedy',json={**req,'step':6,'actor':'EPC demo','acknowledged':True}).json()['id']==final['id']
+    d=c.get(url+'?mode=SIMULATION').json(); assert d['steps']==original and len(d['remedy'])==6
+    assert c.post(url+'/remedy',json={**req,'mode':'REAL'}).status_code==404
+    assert c.app.state.store.record(pack['id'])==pack
+    current=c.app.state.store.get(pack['project']);c.app.state.store.save(current['model'],current['revision'])
+    assert c.post(url+'/remedy',json=req).status_code==409

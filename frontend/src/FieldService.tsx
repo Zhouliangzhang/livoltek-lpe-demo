@@ -2,10 +2,12 @@ import {useEffect,useState} from 'react'
 import {api} from './types'
 import type {WorkEnvironment} from './M1Start'
 import './fieldService.css'
+import {ServiceRemedy} from './ServiceRemedy'
+import type {RemedyRecord} from './ServiceRemedy'
 type Pack={id:string;created:string;revision:number;title:string;devices:{id:string;name:string}[]}
 type Case={id:string;created:string;device_id:string;symptom:string;mode:string}
 type Diagnosis={id:string;step:number;title:string;observation:string;status:string;conclusion:null|{label:string;reason:string;owner:string;action:string;confidence:string;next:string};evidence:unknown}
-type Detail={case:Case&{package_id:string;baseline_revision:number;baseline_hash:string;current_revision:number;scenario:string;device:{model:string;sn:string;firmware:string;manufacturer:string};changes:{path:string;before:unknown;after:unknown}[];subsequent_revisions:{revision:number;created:string}[];historical_evidence:unknown[];routes:{edge_id:string;from_port_id:string;to_port_id:string}[]};steps:Diagnosis[];support:{id:string;status:string;questions:string[];evidence_ids:string[];observations:string[];sent:boolean}[];stale:boolean}
+type Detail={remedy:RemedyRecord[];case:Case&{package_id:string;baseline_revision:number;baseline_hash:string;current_revision:number;scenario:string;device:{model:string;sn:string;firmware:string;manufacturer:string};changes:{path:string;before:unknown;after:unknown}[];subsequent_revisions:{revision:number;created:string}[];historical_evidence:unknown[];routes:{edge_id:string;from_port_id:string;to_port_id:string}[]};steps:Diagnosis[];support:{id:string;status:string;questions:string[];evidence_ids:string[];observations:string[];sent:boolean}[];stale:boolean}
 const stages=['故障受理','引导诊断','处置与复测','服务报告']
 const checks=['保全故障证据','确认供电与影响范围','检查通信路径','核对配置及后续变化','验证根因与处理分工']
 export function FieldService({projectId,environment,dirty,initialSymptom,openM3}:{projectId:string;environment:WorkEnvironment;dirty:boolean;initialSymptom?:string;openM3:(id:string)=>void}){
@@ -20,7 +22,7 @@ export function FieldService({projectId,environment,dirty,initialSymptom,openM3}
  return <section className="fieldService" aria-label="售后故障诊断工作台">
  <header className="serviceHero"><div><small>M4 / AFTER-SALES DIAGNOSTICS</small><h1>先找到原因，再决定如何处理。</h1><p>以交接基线、后续变更与故障证据为依据，逐步缩小故障范围。</p></div><span>{sim?'独立模拟 · 非现场诊断':environment==='REAL'?'现场准备 · iEMS 未连接':'离线准备 · 不执行测试'}</span></header>
  <div className="serviceBoundary">系统级排查不等于承担系统运营责任。产品、配置、安装与运行条件分别判断；技术根因不自动等于保修结论。</div>
- <nav aria-label="售后作业阶段" className="serviceStages">{stages.map((s,i)=><button key={s} onClick={()=>setView(i)} aria-current={view===i?'step':undefined}><small>0{i+1}</small><b>{s}</b><span>{i<2?'本阶段可用':'后续处理 · 尚未执行'}</span></button>)}</nav>
+ <nav aria-label="售后作业阶段" className="serviceStages">{stages.map((s,i)=><button key={s} onClick={()=>setView(i)} aria-current={view===i?'step':undefined}><small>0{i+1}</small><b>{s}</b><span>{i<3?'本阶段可用':'后续处理 · 尚未执行'}</span></button>)}</nav>
  {error&&<p role="alert" className="startError">{error}</p>}{dirty&&<p className="startPending">M1有未保存修改，请先保存；诊断只能引用可追溯版本。</p>}
  <div className="serviceHistory"><label>服务单<select aria-label="选择服务单" value={cid} disabled={busy} onChange={e=>{if(e.target.value)void work(async()=>{await load(e.target.value);setView(1)});else{setCid('');setDetail(null);setView(0)}}}><option value="">新建故障服务单</option>{cases.map(v=><option key={v.id} value={v.id}>{v.device_id} · {v.symptom.slice(0,32)} · {v.id.slice(0,8)}</option>)}</select></label>{c&&<span>已保存 · {c.id.slice(0,8)} · {sim?'模拟证据':'准备资料'}</span>}</div>
  {view===0&&<article className="serviceCard"><small>01 / INTAKE</small><h2>零馈表失联，从现象开始。</h2><p>不重新录入M1设备和端口。本阶段支持交接范围内零馈表的通信故障受理。</p>
@@ -39,7 +41,8 @@ export function FieldService({projectId,environment,dirty,initialSymptom,openM3}
  {last?.conclusion&&<article className="serviceCard serviceConclusion"><small>诊断结论 / {sim?'仅模拟':'现场未验证'}</small><h2>{last.conclusion.label}</h2><p>{last.conclusion.reason}</p><div className="serviceVerdicts"><div><small>根因状态</small><b>{last.conclusion.confidence}</b></div><div><small>建议协同对象</small><b>{last.conclusion.owner}</b></div><div><small>产品质量 / 保修</small><b>未判定 · 厂家依据待确认</b></div><div><small>现场恢复</small><b>未执行 · 未验证</b></div></div><p>{last.conclusion.action}</p><p>{last.conclusion.next}</p><p>疑似表计故障应联系该设备供应商；若证据指向LIVOLTEK iEMS、驱动或所供产品缺陷，应进入LIVOLTEK产品质量处理。不得因称为系统问题而排除产品责任。</p></article>}
  <article className="serviceCard"><small>TECHNICAL COLLABORATION</small><h2>带着证据协同，不再重复描述。</h2><p>自动附上交接引用、设备、端口、变更、已执行检查和待回答问题。仅保存本地草稿，尚未接通厂家服务系统。</p><button className="primary" disabled={!done||busy} onClick={()=>void work(async()=>{await api(root+'/'+cid+'/support',{mode:environment});await load(cid)})}>生成厂家协同草稿</button>{detail?.support.map(d=><details open key={d.id}><summary>{d.status} · {d.evidence_ids.length}项诊断证据</summary><ul>{d.questions.map(q=><li key={q}>{q}</li>)}</ul><p>报障：{c.symptom} · 对象：{c.device_id} · 交接：{c.package_id.slice(0,8)}</p><details><summary>草稿证据内容</summary><pre>{JSON.stringify(d,null,2)}</pre></details></details>)}</article>
  </>)}
- {view>=2&&<article className="serviceCard"><h2>{stages[view]} · 尚未执行</h2><p>本阶段完成故障受理、根因排查和本地厂家协同草稿。维修、现场恢复、受影响范围复测和服务关闭尚未实施；不会自动将诊断记录标为修复或验收通过。</p><button onClick={()=>setView(c?1:0)}>返回当前诊断</button></article>}
+ {view===2&&<ServiceRemedy key={cid} root={root} cid={cid} mode={environment} ready={!!c&&done===5&&c.scenario==='configuration'} blocked={dirty||!!detail?.stale} records={detail?.remedy||[]} reload={()=>load(cid)} back={()=>setView(c?1:0)}/>}
+ {view===3&&<article className="serviceCard"><h2>{stages[view]} · 尚未执行</h2><p>本阶段完成故障受理、根因排查和本地厂家协同草稿。维修、现场恢复、受影响范围复测和服务关闭尚未实施；不会自动将诊断记录标为修复或验收通过。</p><button onClick={()=>setView(c?1:0)}>返回当前诊断</button></article>}
  </section>
 }
 

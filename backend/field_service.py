@@ -29,6 +29,12 @@ class Step(BaseModel):
     mode:Mode
     step:int=Field(ge=1,le=5)
 
+class Remedy(BaseModel):
+    mode:Mode
+    step:int=Field(ge=1,le=6)
+    actor:str=Field(default="",max_length=100)
+    acknowledged:bool=False
+
 class Support(BaseModel):
     mode:Mode
 
@@ -87,7 +93,7 @@ def register_field_service(app,db):
     @app.get('/api/projects/{project}/service/{cid}')
     def detail(project:str,cid:str,mode:Mode='SIMULATION'):
         c=get_case(project,cid,mode)
-        return dict(case=c,steps=records(c),support=db.records('service_support',cid),stale=db.get(project)['revision']!=c['current_revision'],field_connected=False)
+        return dict(case=c,steps=records(c),support=db.records('service_support',cid),remedy=sorted(db.records('service_remedy',cid),key=lambda r:r['step']),stale=db.get(project)['revision']!=c['current_revision'],field_connected=False)
 
     @app.post('/api/projects/{project}/service/{cid}/diagnose')
     def diagnose(project:str,cid:str,body:Step):
@@ -116,3 +122,33 @@ def register_field_service(app,db):
         if not rs:raise HTTPException(409,'先完成证据保全；证据不足也可发起协同草稿')
         last=rs[-1]
         return db.add_once('service_support',cid,dict(mode=body.mode,source=c['source'],sent=False,status='本地协同草稿 · 未发送',device=c['device'],package_id=c['package_id'],baseline_hash=c['baseline_hash'],changes=c['changes'],evidence_ids=[r['id'] for r in rs],observations=[r['observation'] for r in rs],conclusion=last['conclusion'],questions=['请确认该型号/固件的通信点表、端子定义及只读诊断方法','请评估现有证据是否足以定位根因，并列出缺少的验证','如涉及产品缺陷，请明确进一步检测与处置方案；保修责任另行核验'],field_result=None,warranty='未判定'),digest(dict(case=cid,evidence=[r['id'] for r in rs])))
+
+
+    @app.post('/api/projects/{project}/service/{cid}/remedy')
+    def remedy(project:str,cid:str,body:Remedy):
+        c=get_case(project,cid,body.mode)
+        if body.mode!='SIMULATION':raise HTTPException(503,'厂家批准依据、真实权限与执行接口未具备；现场处置保持阻断')
+        if db.get(project)['revision']!=c['current_revision']:raise HTTPException(409,'工程版本已变化，需重新核验方案与批准范围')
+        diagnosis=records(c)
+        if len(diagnosis)!=5 or c['scenario']!='configuration':raise HTTPException(409,'本流程仅适用于已完成诊断的通信地址不匹配模拟场景')
+        rs=sorted(db.records('service_remedy',cid),key=lambda r:r['step'])
+        existing=next((r for r in rs if r['step']==body.step),None)
+        if existing:return existing
+        if body.step!=len(rs)+1:raise HTTPException(409,'先完成前置方案、批准或复测，不允许跳步恢复')
+        if body.step in (2,6) and (not body.actor.strip() or not body.acknowledged):raise HTTPException(422,'填写演练操作人并确认仅用于模拟，不代表现场批准或修复')
+        titles=['形成修正方案','批准模拟方案','执行与参数读回','通信复测','计量复测','稳定观察与恢复确认']
+        evidence=dict(fixture='SIM-M4-REMEDY-1',device_id=c['device_id'],package_id=c['package_id'],baseline_hash=c['baseline_hash'],diagnosis_ids=[r['id'] for r in diagnosis],prior_remedy_ids=[r['id'] for r in rs])
+        descriptions=[
+          '仅将模拟iEMS表计目标地址由2改为1，表计地址保持1；不改变CT/PT、功率方向、零馈策略或M1/M3基线。',
+          '演练批准绑定本方案及交接基线，仅授权模拟地址修正；不构成现场写权限。',
+          '模拟指令确认后独立读回目标地址1，与方案一致；指令确认本身不作为配置生效结论。',
+          '模拟读取10次全部成功；地址、设备映射与数据刷新有效，无超时和CRC错误。',
+          '模拟有功功率与参考值同向、单位一致、倍率换算一致；不将通信恢复等同于计量正确。',
+          '虚拟时间连续60秒稳定，模拟恢复确认；未执行现场修复、联动放行或服务关闭。']
+        if body.step==1:evidence.update(target='iEMS / METER_PCC target_address',before=2,proposed=1,meter_address=1,scope='仅模拟表计通信寻址',rollback='读回或复测失败则停止后续放行，保持反馈无效；按本方案回退模拟目标地址2并保留失败证据',pending=['厂家点表与地址修改方法','读回生效规则与超时阈值','CT/PT、方向及计量误差判据','恢复稳定时长与控制恢复规程'])
+        if body.step==2:evidence.update(approved_plan_id=rs[0]['id'],actor=body.actor.strip(),scope='SIMULATION_ONLY')
+        if body.step==3:evidence.update(approval_id=rs[1]['id'],before=2,command_ack=True,readback=1,expected=1,readback_match=True,physical_write=False)
+        if body.step==4:evidence.update(samples=[dict(sequence=i,address=1,valid=True,age_ms=100,latency_ms=35+i,crc_error=False) for i in range(1,11)],pass_rule='仅演练：10/10有效，零超时，零CRC错误')
+        if body.step==5:evidence.update(samples=[dict(reference_kw=p,raw=p/20,ct_pt_multiplier=20,converted_kw=p,unit='kW',direction='进口为正 / 出口为负',valid=True) for p in (40,0,-20)],pass_rule='仅演练：正、零、负三点换算一致；倍率20并非本项目批准参数')
+        if body.step==6:evidence.update(actor=body.actor.strip(),virtual_seconds=60,stable_required_seconds=60,samples=[dict(t_seconds=t,communication_valid=True,meter_valid=True,alarm=False) for t in (10,20,30,40,50,60)],pass_rule='仅演练：连续60秒数据有效；异常须重新计时，此场景无注入复发',control_released=False)
+        return db.add_once('service_remedy',cid,dict(step=body.step,title=titles[body.step-1],summary=descriptions[body.step-1],mode=body.mode,source='SIMULATOR',manufacturer_basis='PENDING',field_repaired=False,field_result=None,physical_actions=False,simulation_recovered=body.step==6,status='模拟恢复已确认' if body.step==6 else '模拟已记录',evidence=evidence),digest(dict(case=cid,remedy_step=body.step)))
