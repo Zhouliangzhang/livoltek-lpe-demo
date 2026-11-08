@@ -3,6 +3,7 @@ from typing import Literal
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from .domain import digest
+from .session_scope import preflight, freeze
 
 ORDER=['selfcheck','route','identity','quality','reference','stability','complete']
 TITLES=['iEMS 自检与控制权','连接与通信配置','目标电表识别','计量数据质量','方向倍率与独立参照','连续有效计量','结束验证与证据封存']
@@ -19,6 +20,13 @@ class Start(BaseModel):
     acknowledged:bool=False
     operator:str=Field(min_length=1,max_length=100)
     reference:str=Field(min_length=1,max_length=1000)
+    scope:Literal['READ_ONLY','METER_VALIDATION']='METER_VALIDATION'
+    witness_requirement:Literal['NONE','EPC_WITNESS','JOINT_WITNESS']='NONE'
+    witness_name:str=Field(default='',max_length=200)
+    installation_ref:str=Field(default='',max_length=1000)
+    energization_ref:str=Field(default='',max_length=1000)
+    authorization_ref:str=Field(default='',max_length=1000)
+    procedure_ref:str=Field(default='',max_length=1000)
 class Run(BaseModel):
     step:Literal['selfcheck','route','identity','quality','reference','stability','complete']
     scenario:Literal['normal','timeout','wrong_identity','stale','frozen','bad','scale','reverse','gap']='normal'
@@ -90,16 +98,17 @@ def register_meter_workflow(app,db):
         sessions=[s for s in db.records('meter_session',id) if s['mode']==mode]
         attempts={s['id']:db.records('meter_run',s['id']) for s in sessions}
         results={sid:states(records) for sid,records in attempts.items()}
-        return dict(model=m,routes=routes,stale=stale,sessions=sessions,progress=results,attempts=attempts,basis=BASIS,real_connected=False,version='M2-SEQUENCE-1')
+        return dict(model=m,routes=routes,stale=stale,sessions=sessions,progress=results,attempts=attempts,basis=BASIS,preflights={r['edge_id']:preflight(m,r) for r in routes},real_connected=False,version='M2-SEQUENCE-1')
     @app.post('/api/plans/{id}/meter-workflow')
     def start(id:str,body:Start):
         p,m,routes,stale=context(id)
         if stale:raise HTTPException(409,'模型已变化，请先更新调试依据')
         if not body.acknowledged or not body.operator.strip() or not body.reference.strip():raise HTTPException(422,'请填写责任人、条件依据并确认本次范围')
+        if body.witness_requirement!='NONE' and not body.witness_name.strip():raise HTTPException(422,'请填写见证人或见证组织')
         route=next((r for r in routes if r['edge_id']==body.edge_id),None)
         if route is None:raise HTTPException(422,'缺少零馈表与 iEMS 直接通信连接，请在 M1 补充')
         if route['meter']['domain']!=route['ems']['domain']:raise HTTPException(422,'两端通信域不一致，请在 M1 修正')
-        return db.add('meter_session',id,{**body.model_dump(), 'model_hash':p['engineering_hash'],'revision':p['revision'],'route':route,'source':'SIMULATOR' if body.mode=='SIMULATION' else 'FIELD_PREPARATION','binding_status':'SIMULATED' if body.mode=='SIMULATION' else 'UNVERIFIED','manufacturer_basis':'PENDING','version':'M2-SEQUENCE-1'})
+        return db.add('meter_session',id,{**body.model_dump(), **freeze(p,m,route,body), 'model_hash':p['engineering_hash'],'revision':p['revision'],'route':route,'source':'SIMULATOR' if body.mode=='SIMULATION' else 'FIELD_PREPARATION','binding_status':'SIMULATED' if body.mode=='SIMULATION' else 'UNVERIFIED','manufacturer_basis':'PENDING','version':'M2-SEQUENCE-1'})
     @app.post('/api/plans/{id}/meter-workflow/{session_id}/run')
     def run(id:str,session_id:str,body:Run):
         p,m,routes,stale=context(id)
@@ -108,6 +117,7 @@ def register_meter_workflow(app,db):
         if s['kind']!='meter_session' or s['project']!=id:raise HTTPException(404,'调试会话不属于当前项目依据')
         if stale or s['model_hash']!=p['engineering_hash']:raise HTTPException(409,'配置基线已变化，需重新验证')
         if s['mode']!='SIMULATION':raise HTTPException(503,'真实 iEMS 未连接，厂家判据未批准；未执行现场测试')
+        if s.get('scope')=='READ_ONLY' and body.step in ['reference','stability','complete']:raise HTTPException(409,'本次为只读诊断范围；完整计量验证需重新建立对应范围的会话')
         if body.scenario not in ALLOWED[body.step]:raise HTTPException(422,'此故障场景不适用于本步骤')
         progress=states(db.records('meter_run',s['id']));idx=ORDER.index(body.step)
         if not progress[idx]['unlocked']:raise HTTPException(409,'前置步骤未通过或已失效，请按调试顺序执行')
