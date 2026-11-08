@@ -79,12 +79,15 @@ def simulate_case(kind,pvs,bess,meter,ems,fault,recovery_mode,rid):
  return dict(key=kind,title=NAMES[kind],fault_node=selected,status='PASS' if cleared_at is not None else 'FAIL',stable_verified=stable_verified,restored=restored,alarm_latched=alarm,cleared_at=cleared_at,samples=samples,commands=commands,events=events,issues=issues,source='SIMULATOR',recovery_mode=recovery_mode)
 
 
+def degradation_context(db,id,sid,mode):
+ p,s,groups,zero,cap,ready=dynamic_context(db,id,sid,mode)
+ prior=next((r for r in db.records('dynamic_response',sid) if r['mode']==mode),None) if s and s['mode']==mode else None
+ ready=bool(ready and prior and prior['zero_export_id']==zero['id'] and prior['status']=='PASS' and prior['restored'] and not prior['alarm_latched'] and {c['key'] for c in prior['cases']}=={'load_step','pv_fluctuation','charge_limited'})
+ return p,s,groups,prior,cap,ready
+
+
 def register_degradation(app,db):
- def context(id,sid,mode):
-  p,s,groups,zero,cap,ready=dynamic_context(db,id,sid,mode)
-  prior=next((r for r in db.records('dynamic_response',sid) if r['mode']==mode),None) if s and s['mode']==mode else None
-  ready=bool(ready and prior and prior['zero_export_id']==zero['id'] and prior['status']=='PASS' and prior['restored'] and not prior['alarm_latched'] and {c['key'] for c in prior['cases']}=={'load_step','pv_fluctuation','charge_limited'})
-  return p,s,groups,prior,cap,ready
+ def context(id,sid,mode):return degradation_context(db,id,sid,mode)
  def recovery_records(r):return db.records('degradation_recovery',r['id'])
  def recovered(r):return any(x['verified'] for x in recovery_records(r))
  @app.get('/api/plans/{id}/degradation')

@@ -1,0 +1,28 @@
+import {test,expect} from '@playwright/test'
+import fixture from '../../examples/ci20-pilot.json' with {type:'json'}
+test('step12 requires cleanup, resets on recurrence, and never completes persistent faults',async({page,request})=>{
+ const model=structuredClone(fixture);model.project.project_id+='-OBSERVE12';model.parameters.forEach(p=>{if(p.scope==='PROJECT')p.owner_id=model.project.project_id})
+ await request.post('/api/projects',{data:{model,expected_revision:0}})
+ const plan=await(await request.post(`/api/projects/${model.project.project_id}/plans`)).json(),base=`/api/plans/${plan.id}`
+ const session=await(await request.post(base+'/meter-workflow',{data:{mode:'SIMULATION',edge_id:'CI-072',acknowledged:true,operator:'连续观察演练',reference:'独立合成测试'}})).json()
+ for(const step of ['selfcheck','route','identity','quality','reference','stability','complete'])await request.post(base+'/meter-workflow/'+session.id+'/run',{data:{step}})
+ for(const endpoint of ['pv-communication','bess-communication','configuration-readback','pv-control','bess-control','zero-export','dynamic-response','degradation'])expect((await request.post(base+'/'+endpoint,{data:{session_id:session.id,acknowledged:true,request_id:endpoint}})).ok()).toBeTruthy()
+ await page.goto('/');await page.getByLabel('选择项目').selectOption(model.project.project_id);await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
+ const go=()=>page.getByRole('navigation',{name:'调试顺序'}).getByRole('button',{name:/12 连续观察/}).click()
+ await go();const view=page.getByRole('region',{name:'连续观察测试'})
+ await view.getByRole('checkbox').check();await view.getByRole('button',{name:'执行模拟连续观察'}).click()
+ await expect(view.getByRole('status')).toContainText('模拟观察完成 · 连续 20/20秒 · 重计时 0次')
+ await expect(view.getByRole('img',{name:'连续观察并网点功率曲线'})).toBeVisible()
+ await view.getByLabel('观察演练场景').selectOption('pv_loss');await view.getByLabel('观察异常设备').selectOption('PV_03');await view.getByLabel('观察异常过程').selectOption('repeat');await view.getByRole('button',{name:'执行模拟连续观察'}).click()
+ await expect(view.getByRole('status')).toContainText('重计时 2次')
+ await view.locator('.dgEvents').getByRole('button',{name:/23s/}).click();await expect(view.locator('.dgReplay')).toContainText('0 / 20秒')
+ await view.getByRole('button',{name:'定位处理 PV_03',exact:true}).first().click();await expect(page.getByRole('region',{name:'L4 作业区'})).toBeVisible()
+ await page.getByRole('button',{name:'返回 M2 调试',exact:true}).click();await go();await view.getByRole('checkbox').check()
+ await view.getByLabel('观察演练场景').selectOption('meter_loss');await view.getByLabel('观察异常过程').selectOption('persistent');await view.getByRole('button',{name:'执行模拟连续观察'}).click()
+ await expect(view.getByRole('status')).toContainText('未完成 · 连续 0/20秒')
+ await page.reload();await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click();await go();await expect(view.getByRole('status')).toContainText('未完成')
+ await view.getByRole('checkbox').check();await view.getByLabel('观察演练场景').selectOption('cleanup_failed');await view.getByRole('button',{name:'执行模拟连续观察'}).click()
+ await expect(view.getByRole('status')).toContainText('准备阻断');await expect(view.getByRole('img',{name:'连续观察并网点功率曲线'})).toHaveCount(0)
+ await view.getByLabel('观察演练场景').selectOption('normal');await view.getByRole('button',{name:'执行模拟连续观察'}).click();await expect(view.getByRole('status')).toContainText('模拟观察完成')
+ await page.getByLabel('选择 iEMS 环境').selectOption('REAL');await go();await expect(view.getByRole('button',{name:'现场观察不可用'})).toBeDisabled();await expect(view.getByRole('status')).toHaveCount(0)
+})
