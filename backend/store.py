@@ -82,3 +82,9 @@ class Store:
             if not r:
                 raise KeyError(id)
             return json.loads(r['body'])
+
+    def add_once(self, kind, project, body, record_id):
+        record = {'id':record_id, 'kind':kind, 'project':project, 'created':now(), **body}
+        with self.db() as c:
+            c.execute('INSERT OR IGNORE INTO records VALUES(?,?,?,?,?)', (record_id,kind,project,json.dumps(record),record['created']))
+            return json.loads(c.execute('SELECT body FROM records WHERE id=?', (record_id,)).fetchone()['body'])

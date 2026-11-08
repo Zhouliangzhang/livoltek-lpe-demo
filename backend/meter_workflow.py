@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from .domain import digest
 from .session_scope import preflight, freeze
+from .iems_selfcheck import selfcheck, SCENARIOS
 
 ORDER=['selfcheck','route','identity','quality','reference','stability','complete']
 TITLES=['iEMS 自检与控制权','连接与通信配置','目标电表识别','计量数据质量','方向倍率与独立参照','连续有效计量','结束验证与证据封存']
@@ -29,9 +30,10 @@ class Start(BaseModel):
     procedure_ref:str=Field(default='',max_length=1000)
 class Run(BaseModel):
     step:Literal['selfcheck','route','identity','quality','reference','stability','complete']
-    scenario:Literal['normal','timeout','wrong_identity','stale','frozen','bad','scale','reverse','gap']='normal'
+    scenario:str=Field(default='normal',max_length=60)
+    request_id:str|None=Field(default=None,min_length=1,max_length=100,pattern=r'^[A-Za-z0-9_-]+$')
 
-ALLOWED={'selfcheck':['normal'],'route':['normal'],'identity':['normal','timeout','wrong_identity'],'quality':['normal','stale','frozen','bad','scale'],'reference':['normal','reverse','scale'],'stability':['normal','gap','stale'],'complete':['normal']}
+ALLOWED={'selfcheck':SCENARIOS,'route':['normal'],'identity':['normal','timeout','wrong_identity'],'quality':['normal','stale','frozen','bad','scale'],'reference':['normal','reverse','scale'],'stability':['normal','gap','stale'],'complete':['normal']}
 
 def states(records):
     output=[];parent=None;valid=True
@@ -109,18 +111,38 @@ def register_meter_workflow(app,db):
         if route is None:raise HTTPException(422,'缺少零馈表与 iEMS 直接通信连接，请在 M1 补充')
         if route['meter']['domain']!=route['ems']['domain']:raise HTTPException(422,'两端通信域不一致，请在 M1 修正')
         return db.add('meter_session',id,{**body.model_dump(), **freeze(p,m,route,body), 'model_hash':p['engineering_hash'],'revision':p['revision'],'route':route,'source':'SIMULATOR' if body.mode=='SIMULATION' else 'FIELD_PREPARATION','binding_status':'SIMULATED' if body.mode=='SIMULATION' else 'UNVERIFIED','manufacturer_basis':'PENDING','version':'M2-SEQUENCE-1'})
+    def run_id(session_id,request_id):
+        return digest({'session':session_id,'request':request_id})
+    @app.get('/api/plans/{id}/meter-workflow/{session_id}/runs/{request_id}')
+    def query_run(id:str,session_id:str,request_id:str):
+        try:
+            session=db.record(session_id)
+            if session['kind']!='meter_session' or session['project']!=id:raise KeyError(session_id)
+            return db.record(run_id(session_id,request_id))
+        except KeyError:raise HTTPException(404,'原运行尚无持久化记录；未自动重新启动')
     @app.post('/api/plans/{id}/meter-workflow/{session_id}/run')
     def run(id:str,session_id:str,body:Run):
         p,m,routes,stale=context(id)
         try:s=db.record(session_id)
         except KeyError:raise HTTPException(404,'调试会话不存在')
         if s['kind']!='meter_session' or s['project']!=id:raise HTTPException(404,'调试会话不属于当前项目依据')
+        if body.request_id:
+            try:previous=db.record(run_id(session_id,body.request_id))
+            except KeyError:previous=None
+            if previous:
+                if previous['step']!=body.step or previous['scenario']!=body.scenario:raise HTTPException(409,'该运行ID已用于不同动作')
+                return previous
         if stale or s['model_hash']!=p['engineering_hash']:raise HTTPException(409,'配置基线已变化，需重新验证')
         if s['mode']!='SIMULATION':raise HTTPException(503,'真实 iEMS 未连接，厂家判据未批准；未执行现场测试')
         if s.get('scope')=='READ_ONLY' and body.step in ['reference','stability','complete']:raise HTTPException(409,'本次为只读诊断范围；完整计量验证需重新建立对应范围的会话')
         if body.scenario not in ALLOWED[body.step]:raise HTTPException(422,'此故障场景不适用于本步骤')
         progress=states(db.records('meter_run',s['id']));idx=ORDER.index(body.step)
         if not progress[idx]['unlocked']:raise HTTPException(409,'前置步骤未通过或已失效，请按调试顺序执行')
-        result=simulate(body.step,body.scenario,s['route'])
+        result=selfcheck(s,body.scenario) if body.step=='selfcheck' else simulate(body.step,body.scenario,s['route'])
         if body.step=='complete':result['evidence_ids']=[state['record']['id'] for state in progress[:idx]]
-        return db.add('meter_run',s['id'],{**result,**body.model_dump(),'model_hash':s['model_hash'],'edge_id':s['edge_id'],'predecessor_id':progress[idx-1]['record']['id'] if idx else None})
+        record={**result,**body.model_dump(),'model_hash':s['model_hash'],'edge_id':s['edge_id'],'predecessor_id':progress[idx-1]['record']['id'] if idx else None}
+        if body.request_id:
+            saved=db.add_once('meter_run',s['id'],record,run_id(s['id'],body.request_id))
+            if saved['step']!=body.step or saved['scenario']!=body.scenario:raise HTTPException(409,'该运行ID已用于不同动作，请查询原运行或明确重新执行')
+            return saved
+        return db.add('meter_run',s['id'],record)
