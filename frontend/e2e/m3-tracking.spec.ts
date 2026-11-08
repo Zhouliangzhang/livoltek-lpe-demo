@@ -1,0 +1,30 @@
+import {test,expect} from '@playwright/test'
+import fixture from '../../examples/ci20-pilot.json' with {type:'json'}
+test('M3 tracks work, validates retest, and seals V2 without replacing V1',async({page,request})=>{
+ test.setTimeout(150000)
+ const model=structuredClone(fixture);model.project.project_id+='-TRACK-M3';model.parameters.forEach(p=>{if(p.scope==='PROJECT')p.owner_id=model.project.project_id})
+ await request.post('/api/projects',{data:{model,expected_revision:0}})
+ const plan=await(await request.post(`/api/projects/${model.project.project_id}/plans`)).json(),base=`/api/plans/${plan.id}`
+ const session=await(await request.post(base+'/meter-workflow',{data:{mode:'SIMULATION',edge_id:'CI-072',acknowledged:true,operator:'清单演练工程师',reference:'合成资料'}})).json(),body={session_id:session.id,acknowledged:true}
+ for(const step of ['selfcheck','route','identity','quality','reference','stability','complete'])await request.post(base+'/meter-workflow/'+session.id+'/run',{data:{step}})
+ for(const endpoint of ['pv-communication','bess-communication','configuration-readback','pv-control','bess-control','zero-export','dynamic-response','degradation'])expect((await request.post(base+'/'+endpoint,{data:{...body,request_id:endpoint}})).ok()).toBeTruthy()
+ await request.post(base+'/continuous-observation',{data:{...body,request_id:'fault',scenario:'pv_loss',fault_node:'PV_03',pattern:'persistent'}})
+ const r1=await(await request.post(base+'/sat-report',{data:{...body,request_id:'report1'}})).json()
+ const pack=await(await request.post(base+'/handover',{data:{...body,request_id:'seal1',report_id:r1.id,prepared_by:'EPC'}})).json()
+ await page.goto('/');await page.getByLabel('选择项目').selectOption(model.project.project_id);await page.getByRole('button',{name:'M3 项目交接',exact:true}).click()
+ const tracker=page.getByRole('region',{name:'M3遗留事项处理清单'}),editor=tracker.getByRole('article',{name:'事项处理记录'})
+ await tracker.getByLabel('搜索处理事项').fill('光伏通信中断');await tracker.getByRole('button',{name:'展开处理',exact:true}).click()
+ await editor.getByLabel('事项处理人').fill('EPC演练工程师');await editor.getByLabel('处理资料引用').fill('SIM-PV03-WORK-01');await editor.getByLabel('事项处理说明').fill('仅模拟处理：核对PV_03通信路径后提交复测。')
+ await editor.getByRole('button',{name:'提交处理并等待复测',exact:true}).click();await expect(editor.locator('.trackState')).toContainText('待复测')
+ const run=await(await request.post(base+'/continuous-observation',{data:{...body,request_id:'retest'}})).json(),r2=await(await request.post(base+'/sat-report',{data:{...body,request_id:'report2'}})).json()
+ await tracker.getByRole('button',{name:'刷新处理清单',exact:true}).click();await editor.getByLabel('选择复测报告').selectOption(r2.id);await editor.getByLabel('选择复测证据').selectOption(run.id);await editor.getByRole('button',{name:'关联并核验复测证据',exact:true}).click()
+ await expect(editor.locator('.trackState')).toContainText('模拟复测满足');await editor.getByRole('button',{name:'查看关联复测证据',exact:true}).click();await expect(editor.getByRole('region',{name:'关联复测证据'})).toContainText('模拟器 · 合成数据')
+ await tracker.getByLabel('处理清单责任方').selectOption('MANUFACTURER');await tracker.getByLabel('搜索处理事项').fill('');await tracker.getByRole('button',{name:'展开处理',exact:true}).first().click()
+ await editor.getByLabel('事项处理人').fill('资料编制人');await editor.getByLabel('处理资料引用').fill('DRAFT-REF-01');await editor.getByLabel('事项处理说明').fill('登记厂家草稿引用，仍需厂家核验适用性。');await editor.getByRole('button',{name:'提交厂家资料待确认',exact:true}).click();await expect(editor.locator('.trackState')).toContainText('待厂家确认')
+ const r3=await(await request.post(base+'/sat-report',{data:{...body,request_id:'report3'}})).json();await tracker.getByRole('button',{name:'刷新处理清单',exact:true}).click()
+ await tracker.getByText('根据处理结果生成新版交接包',{exact:true}).click();await tracker.getByLabel('新版交接编制人').fill('EPC演练工程师');await tracker.getByLabel('新版交接报告').selectOption(r3.id);await tracker.getByRole('checkbox').check();await tracker.getByRole('button',{name:'生成新版模拟交接包',exact:true}).click()
+ const m3=page.getByRole('region',{name:'M3项目交接包'});await expect(m3.getByLabel('选择交接包')).toContainText('交接V2');await expect(tracker).toContainText('所选包已封存当前处理记录')
+ const versions=await(await request.get(`/api/projects/${model.project.project_id}/handovers`)).json();expect(versions.packages).toHaveLength(2)
+ await m3.getByLabel('选择交接包').selectOption(pack.id);await expect(tracker).toContainText('实时处理记录');await expect(m3.getByLabel('选择交接包')).toContainText('交接V1')
+ await page.getByLabel('选择 iEMS 环境').selectOption('REAL');await expect(m3.getByText('尚无现场交接资料包',{exact:true})).toBeVisible();await expect(tracker).toHaveCount(0)
+})

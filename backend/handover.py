@@ -37,7 +37,7 @@ def register_handover(app,db):
   return not data['report']['model_stale'] and pack['report']['snapshot_hash']==data['report']['snapshot_hash']
  def brief(pack):
   f=pack['followup']
-  return dict(id=pack['id'],mode=pack['mode'],created=pack['created'],title=pack['title'],status=pack['status'],revision=pack['revision'],plan_id=pack['plan_id'],session_id=pack['session_id'],report_id=pack['report_id'],prepared_by=pack['prepared_by'],seal_hash=pack['seal_hash'],request_id=pack['request_id'],current=current(pack),counts=dict(incomplete=len(f['incomplete']),pending=len(f['pending']),open_issues=sum(not i['resolved'] for i in f['issues']),historical=len(f['historical_issues'])),field_accepted=False)
+  return dict(handover_version=pack.get('handover_version',1),parent_package_id=pack.get('parent_package_id'),root_package_id=pack.get('root_package_id',pack['id']),id=pack['id'],mode=pack['mode'],created=pack['created'],title=pack['title'],status=pack['status'],revision=pack['revision'],plan_id=pack['plan_id'],session_id=pack['session_id'],report_id=pack['report_id'],prepared_by=pack['prepared_by'],seal_hash=pack['seal_hash'],request_id=pack['request_id'],current=current(pack),counts=dict(incomplete=len(f['incomplete']),pending=len(f['pending']),open_issues=sum(not i['resolved'] for i in f['issues']),historical=len(f['historical_issues'])),field_accepted=False)
  def get_pack(project,package_id,mode):
   try:
    pack=db.record(package_id)
@@ -99,6 +99,7 @@ def register_handover(app,db):
   p=get_pack(id,package_id,mode);stream=io.BytesIO()
   manifest={k:p[k] for k in ('id','created','title','mode','status','revision','model_hash','prepared_by','seal_hash','manifest','plan_id','session_id','report_id','signature_status','field_accepted','sat_passed','handover_boundary')}
   files={'baseline.json':p['baseline'],'test-results.json':p['test_results'],'sat-report.json':p['report'],'evidence.json':p['report']['raw_evidence'],'followup.json':p['followup'],'manifest.json':manifest}
+  if 'tracking_snapshot' in p:files['tracking.json']=p['tracking_snapshot'];manifest.update(parent_package_id=p['parent_package_id'],root_package_id=p['root_package_id'],handover_version=p['handover_version'])
   with zipfile.ZipFile(stream,'w',zipfile.ZIP_DEFLATED) as z:
    for name,content in files.items():z.writestr(name,json.dumps(content,ensure_ascii=False,indent=2))
    z.writestr('sat-report.html',p['sat_report_html'])
