@@ -11,7 +11,7 @@ class DynamicCommand(BaseModel):
     mode:Literal['SIMULATION','REAL']
     scenario:Literal['load_step','pv_fluctuation','charge_limited']
     delay_s:Literal[0.5,1,2,3]=1
-    fault:Literal['none','pv_stuck','bess_block','bess_comm_loss']='none'
+    fault:Literal['none','pv_stuck','bess_block','bess_comm_loss','meter_comm_loss','meter_invalid']='none'
     fault_node:str|None=None
     mitigation:bool=False
     recover:bool=False
@@ -23,6 +23,9 @@ def dynamic_simulate(model,body):
     preflight=simulate(model,Command(mode='SIMULATION',scenario='surplus'))
     base={'scenario':body.scenario,'title':SCENARIOS[body.scenario],'mode':'SIMULATION','source':'SIMULATOR','version':'M2-DYNAMIC-1','field_result':None,'manufacturer_basis':'PENDING','trace':[],'events':[],'issues':[], 'metrics':None}
     if preflight['status']=='BLOCKED':return {**base,'status':'BLOCKED','issues':[{**i,'time':0,'route':[]} for i in preflight['issues']]}
+    if body.fault in ('meter_comm_loss','meter_invalid'):
+        from .meter_degradation import simulate_meter
+        return simulate_meter(model,body,preflight)
     p=participants(model);pv_nodes=p['pv'];bess_nodes=p['bess'];np=len(pv_nodes);nb=len(bess_nodes)
     targets=pv_nodes if body.fault=='pv_stuck' else bess_nodes if body.fault in ('bess_block','bess_comm_loss') else []
     if body.fault=='none' and body.fault_node:raise HTTPException(422,'未注入故障时不能指定故障设备')

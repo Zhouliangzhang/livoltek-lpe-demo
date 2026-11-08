@@ -12,7 +12,7 @@ export function automaticPositions(model:Model){return projectFramework(model).p
 export function Topology({model,flows}:{model:Model;flows:Record<string,Flow>}) {
  const groups=useMemo(()=>model.nodes.length>30?groupedTopology(model):null,[model])
  if(!groups)return <TopologyCanvas model={model} flows={flows}/>
- return <div className="topologyGroups"><div className="topologyGroupIntro"><strong>系统分区总览</strong><span>{model.nodes.length} 个工程对象 · {model.edges.length} 条端口连接 · 自动分组，只读</span><p>每条连接只在一个分区绘制。虚线设备为跨区引用，不是新增资产；通信与控制关系集中显示在第四区。滚轮在指针处缩放查看。</p></div>{groups.map((group,i)=><section className={'topologyGroup topologyGroup-'+group.id} key={group.id} aria-label={group.title+'拓扑'}><header><div><span className="topologyGroupNumber">0{i+1}</span><div><h3>{group.title}</h3><p>{group.subtitle}</p></div></div><span>{group.model.nodes.length-group.references.size} 个对象 · {group.references.size} 个跨区引用 · {group.model.edges.length} 条连接</span></header>{group.id==='control'?<ControlDiagrams group={group} flows={flows}/>:<TopologyCanvas model={group.model} flows={flows} diagram={group}/>}</section>)}</div>
+ return <div className="topologyGroups"><div className="topologyGroupIntro"><strong>系统分区总览</strong><span>{model.nodes.length} 个工程对象 · {model.edges.length} 条端口连接 · 自动分组，只读</span><p>每条连接只在一个分区绘制。虚线设备为跨区引用，不是新增资产；通信与控制关系集中显示在第四区。滚轮上下浏览页面；使用 ＋ / − / 适应 按钮缩放图纸。</p></div>{groups.map((group,i)=><section className={'topologyGroup topologyGroup-'+group.id} key={group.id} aria-label={group.title+'拓扑'}><header><div><span className="topologyGroupNumber">0{i+1}</span><div><h3>{group.title}</h3><p>{group.subtitle}</p></div></div><span>{group.model.nodes.length-group.references.size} 个对象 · {group.references.size} 个跨区引用 · {group.model.edges.length} 条连接</span></header>{group.id==='control'?<ControlDiagrams group={group} flows={flows}/>:<TopologyCanvas model={group.model} flows={flows} diagram={group}/>}</section>)}</div>
 }
 function ControlDiagrams({group,flows}:{group:GroupDiagram;flows:Record<string,Flow>}){
  const sections=useMemo(()=>controlTopology(group),[group])
@@ -23,7 +23,7 @@ function TopologyCanvas({model,flows,diagram}:{model:Model;flows:Record<string,F
  const container=useRef<HTMLDivElement>(null)
  const graphRef=useRef<Graph|null>(null)
  useEffect(()=>{
-  const graph=new Graph({container:container.current!,width:container.current!.clientWidth,height,background:{color:'#f6f9f9'},grid:{visible:true,size:20},interacting:false,panning:false,mousewheel:{enabled:true,minScale:0.15,maxScale:3},connecting:{allowBlank:false,allowNode:false,allowPort:false,validateMagnet:()=>false}})
+  const graph=new Graph({container:container.current!,width:container.current!.clientWidth,height,background:{color:'#f6f9f9'},grid:{visible:true,size:20},interacting:false,panning:false,mousewheel:{enabled:false,minScale:0.15,maxScale:3},connecting:{allowBlank:false,allowNode:false,allowPort:false,validateMagnet:()=>false}})
   graphRef.current=graph
   const observer=new ResizeObserver(()=>{if(container.current){graph.resize(container.current.clientWidth,height);graph.zoomToFit({padding:32,maxScale:1})}})
   observer.observe(container.current!)
