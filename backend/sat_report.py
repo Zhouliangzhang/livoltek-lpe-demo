@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from .domain import digest
 from .store import now
-from .configuration_readback import inventory
+from .configuration_readback import session_inventory
 from .meter_workflow import states, BASIS
 
 TITLES=['调试会话与冻结依据','iEMS自检与控制权','零馈表通信与计量','光伏通信与身份','储能通信与可用能力','配置读回','光伏限功率控制','储能充放电控制','零馈控制联动','动态响应','降级与恢复','连续观察']
@@ -51,8 +51,8 @@ def register_sat_report(app,db):
  def build(id,sid,mode):
   p,s=context(id,sid,mode);model=p['system_context_baseline'];stale=digest(db.get(p['project'])['model'])!=p['engineering_hash']
   evidence={};steps=[];issues=[];pending=[];history=[]
-  def add_pending(step,title,reason,owner='厂家技术支持',node=None,layer='L5',row=None,eid=None):
-   pending.append(dict(step=step,title=title,reason=reason,owner=owner,node_id=node,layer=layer,row_id=row,evidence_id=eid,action='补充适用型号/固件依据并确认批准版本' if 'EPC' not in owner else '核对现场对象并补充资料'))
+  def add_pending(step,title,reason,owner='厂家技术支持',node=None,layer='L5',row=None,eid=None,m1_step=None,focus_label=None):
+   pending.append(dict(m1_step=m1_step,focus_label=focus_label,step=step,title=title,reason=reason,owner=owner,node_id=node,layer=layer,row_id=row,evidence_id=eid,action='补充适用型号/固件依据并确认批准版本' if 'EPC' not in owner else '核对现场对象并补充资料'))
   def add_step(n,record,current,records=None,status=None):
    rs=records if records is not None else ([record] if record else [])
    for r in rs:evidence[r['id']]=r
@@ -64,7 +64,7 @@ def register_sat_report(app,db):
    def add(x,node=None):
     if not x:return
     reason=x.get('reason',x.get('message','未完成'))
-    item=dict(step=n,node_id=x.get('node_id') or node,reason=reason,action=x.get('action','回到本步骤核对原始证据后处理'),layer=x.get('layer','L5'),row_id=x.get('row_id') or x.get('edge_id'),owner=x.get('owner','EPC / 厂家技术支持'),resolved=bool(x.get('resolved',False)),evidence_id=r['id'],current=current)
+    item=dict(step=n,node_id=x.get('node_id') or node,reason=reason,action=x.get('action','回到本步骤核对原始证据后处理'),layer=x.get('layer','L5'),row_id=x.get('row_id') or x.get('edge_id'),owner=x.get('owner','EPC / 厂家技术支持'),m1_step=x.get('m1_step'),focus_label=x.get('focus_label'),resolved=bool(x.get('resolved',False)),evidence_id=r['id'],current=current)
     if not any(y['node_id']==item['node_id'] and y['reason']==reason for y in found):found.append(item)
    add(r.get('diagnosis'),s['route']['meter']['node_id'] if s and n==3 else None)
    if n==2:
@@ -78,7 +78,7 @@ def register_sat_report(app,db):
      if direction.get('status')=='SKIPPED':add(dict(reason=direction.get('label','方向')+'未测试',action='满足适用边界与批准条件后重新验证该方向'),node)
     if d.get('status')=='SKIPPED':add(dict(reason='设备未测试',action='解决前置异常后逐台重新验证'),node)
     for row in d.get('parameters',[]):
-     if row.get('status') in ('DIFFERENCE','UNREAD','UNIT_MISMATCH','TYPE_MISMATCH'):add(dict(reason=row['label']+'：'+row['reason'],action=row['action'],row_id=row['row_id']),node)
+     if row.get('status') in ('DIFFERENCE','UNREAD','UNIT_MISMATCH','TYPE_MISMATCH'):add(dict(reason=row['label']+'：'+row['reason'],action=row['action'],row_id=row['row_id'],m1_step=row.get('m1_step'),focus_label=row.get('focus_label')),node)
    for case in r.get('cases',[]):
     for x in case.get('issues',[]):add(x)
    (history if historical else issues).extend(found)
@@ -116,18 +116,18 @@ def register_sat_report(app,db):
      for d in group['devices']:
       for title in [x for x in d.get('pending',[]) if x not in ('现场SN','现场固件')]:add_pending(n,title,'当前型号/固件的适用资料待补充',node=d['node_id'],layer='L3',eid=last['id'] if last else None)
   for b in BASIS:add_pending(3,b['title'],b['missing'],b['owner'],s['route']['meter']['node_id'] if s else None,b['layer'])
-  for d in inventory(model):
+  for d in session_inventory(p,s,mode):
    for key,label in [('sn','SN'),('firmware','固件版本')]:
     if not d.get(key):add_pending(4 if d['kind']=='PV_INVERTER' else 5 if d['kind']=='BESS' else 1,'设备'+label+'待补充','无法完成实际设备身份核对','EPC 现场工程师',d['node_id'],'L3')
    for row in d['parameters']:
     if row['approved'] is None or row.get('pending') or row.get('stale'):
-     add_pending(6,row['label'],'正常运行批准配置、厂家读回映射或适用依据待确认',node=d['node_id'],row=row['row_id'])
+     add_pending(6,row['label'],'正常运行批准配置、厂家读回映射或适用依据待确认',node=d['node_id'],row=row['row_id'],m1_step=row.get('m1_step'),focus_label=row.get('focus_label'))
   # Same issue is grouped for display, preserving every affected object and parameter target.
   grouped={}
   for x in pending:
    key=digest({k:x[k] for k in ('step','title','reason','owner','layer')})
    g=grouped.setdefault(key,{**x,'id':key,'targets':[]})
-   target={k:x[k] for k in ('node_id','row_id','evidence_id')}
+   target={k:x[k] for k in ('node_id','row_id','evidence_id','m1_step','focus_label')}
    if target not in g['targets']:g['targets'].append(target)
   pending=list(grouped.values())
   incomplete=[x for x in steps if x['status'] not in ('SIM_PASS',)]

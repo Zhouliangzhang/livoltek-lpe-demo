@@ -56,6 +56,26 @@ def inventory(model):
     return devices
 
 
+def session_inventory(plan,session,mode):
+    package=(session or {}).get('m1_basis')
+    if not package:return inventory(plan['system_context_baseline'])
+    if package['environment']!=mode:raise HTTPException(409,'配置基线环境不匹配')
+    from .m1_delivery import inventory as frozen_inventory
+    b=package['baseline'];snapshot=b['snapshot'];result=[]
+    for device in frozen_inventory(b):
+        nid=device['node_id'];kind=snapshot['structure'][nid]['node_type']
+        if kind not in KINDS:continue
+        rows=[]
+        for r in device['parameters']:
+            label=(r['owner']+' '+r['key']) if r['step']==7 else (nid+' '+r['key']) if nid in snapshot['metering'] else ('策略 '+r['key']) if r['step']==9 else (r['owner'].split('/')[-1]+' '+r['key'])
+            rows.append(dict(id=nid+'::'+r['id'],row_id=r['id'],key=r['key'],label=r['label'],unit=r['unit'],type='canonical',owner=r['owner'],planned=r['planned'],m1_actual=None,approved=None,approval_ref=None,reference=None,stale=False,pending='冻结候选值；厂家点表及批准依据待确认',layer='L5',m1_step=r['step'],focus_label=label))
+        if not rows:
+            rows.append(dict(id=nid+'::missing',row_id=nid,key='missing',label='设备配置待补充',unit='',type='canonical',owner=nid,planned=None,m1_actual=None,approved=None,approval_ref=None,reference=None,stale=False,pending='冻结范围未提供逐台配置；不能复制站级功率代替设备参数',layer='L5',m1_step=7,focus_label=''))
+        identity=snapshot['devices'][nid].get('identity') or {}
+        result.append(dict(node_id=nid,name=device['name'],kind=kind,group=KINDS[kind],model=(identity.get('third_party') or {}).get('model') or device['model'],sn=device['serial_number'],firmware=device['firmware'],parameters=rows))
+    return result
+
+
 def compare(row,scenario):
     expected=row['approved'] if row['approved'] not in (None,'') else row['planned']
     if expected=='':expected=None
@@ -108,7 +128,7 @@ def register_configuration_readback(app,db):
         p,s,prior,stale=context(id,session_id,mode)
         records=[r for r in db.records('configuration_readback',session_id) if r['mode']==mode] if session_id else []
         latest=records[0] if records else None
-        return dict(devices=inventory(p['system_context_baseline']),records=records,prerequisite_ready=bool(prior and not stale),current=bool(latest and prior and not stale and latest['bess_evidence_id']==prior['id'] and latest['model_hash']==p['engineering_hash']),stale=stale,field_connected=False)
+        return dict(devices=session_inventory(p,s,mode),records=records,prerequisite_ready=bool(prior and not stale),current=bool(latest and prior and not stale and latest['bess_evidence_id']==prior['id'] and latest['model_hash']==p['engineering_hash']),stale=stale,field_connected=False)
 
     @app.post('/api/plans/{id}/configuration-readback')
     def execute(id:str,body:Readback):
@@ -123,7 +143,7 @@ def register_configuration_readback(app,db):
             return old
         if stale or not prior:raise HTTPException(409,'请完成当前基线的步骤03至05；前置变化须重验')
         if not body.acknowledged:raise HTTPException(422,'请确认只读范围')
-        devices=inventory(p['system_context_baseline']);ids=[r['id'] for d in devices for r in d['parameters']]
+        devices=session_inventory(p,s,body.mode);ids=[r['id'] for d in devices for r in d['parameters']]
         if body.scenario!='normal' and body.fault_parameter not in ids:raise HTTPException(422,'参数不在本次范围')
         for i,d in enumerate(devices):
             d['execution_order']=i+1;d['parameters']=[compare(r,body.scenario if r['id']==body.fault_parameter else 'normal') for r in d['parameters']]

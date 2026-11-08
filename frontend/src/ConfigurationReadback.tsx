@@ -4,7 +4,7 @@ import type {Issue} from './readinessIssues'
 import './pvCommunication.css'
 import './configurationReadback.css'
 
-type Row={id:string;row_id:string;key:string;label:string;unit:string;owner:string;approved:unknown;planned:unknown;m1_actual:unknown;approval_ref:string|null;reference:string|null;pending:string;actual?:unknown;actual_unit?:string;status?:string;reason?:string;action?:string}
+type Row={m1_step?:number;focus_label?:string;id:string;row_id:string;key:string;label:string;unit:string;owner:string;approved:unknown;planned:unknown;m1_actual:unknown;approval_ref:string|null;reference:string|null;pending:string;actual?:unknown;actual_unit?:string;status?:string;reason?:string;action?:string}
 type Device={node_id:string;name:string;kind:string;group:string;model:string;sn:string|null;firmware:string|null;parameters:Row[]}
 type Run={id:string;created:string;request_id:string;devices:Device[];counts:Record<string,number>;scope_hash:string;bess_evidence_id:string}
 type Data={devices:Device[];records:Run[];current:boolean;prerequisite_ready:boolean}
@@ -21,7 +21,7 @@ export function ConfigurationReadback({planId,sessionId,mode,blocked,locate,supp
  async function run(){setBusy(true);setError('');try{const stored=localStorage.getItem(cache);const body=stored?JSON.parse(stored):{mode,session_id:sessionId,acknowledged:ack,scenario,fault_parameter:targetRow?.id||'',request_id:crypto.randomUUID()};localStorage.setItem(cache,JSON.stringify(body));setPending(true);await api(url,body);localStorage.removeItem(cache);setPending(false);await refresh()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
  if(!data)return <p>{error||'正在读取M1配置基线…'}</p>
  const latest=data.records[0],current=data.current&&!blocked,devices=latest?.devices||data.devices,counts=latest?.counts||{},all=data.devices.flatMap(d=>d.parameters),differences=['DIFFERENCE','UNREAD','UNIT_MISMATCH','TYPE_MISMATCH'].reduce((n,k)=>n+(counts[k]||0),0)
- function locateRow(d:Device,r:Row){locate({id:'config-'+r.id,category:problem(r)?'设置冲突':'待厂家确认',layer:'L5',object:d.name+' / '+r.label,nodeId:d.node_id,rowId:r.row_id,label:(r.row_id.includes('.')?r.row_id:r.key)+' actual',message:r.reason||r.pending,action:r.action||'补充批准配置和厂家依据'})}
+ function locateRow(d:Device,r:Row){locate({id:'config-'+r.id,category:problem(r)?'设置冲突':'待厂家确认',layer:'L5',object:d.name+' / '+r.label,nodeId:d.node_id,rowId:r.row_id,m1Step:r.m1_step,label:r.focus_label||(r.row_id.includes('.')?r.row_id:r.key)+' actual',message:r.reason||r.pending,action:r.action||'补充批准配置和厂家依据'})}
  return <section className="pvComm configurationReadback" aria-label="配置读回验证"><header className="pvIntro"><div><small>CONFIGURATION READBACK / READ ONLY</small><h3>逐台核对，差异落到参数。</h3><p>自动引用M1冻结基线；批准值、候选计划值与设备读回分别保存。只读核对，不自动覆盖差异。</p></div><span>{sim?'模拟读回 · 非现场参数':'真实iEMS未连接'}</span></header>
  <div className="pvMetrics"><div><small>本次范围</small><strong>{data.devices.length} 台</strong><span>{all.length} 项参数 · 四类设备</span></div><div><small>M1已有批准值</small><strong>{all.filter(r=>r.approved!=null).length} 项</strong><span>计划值不自动升级为批准值</span></div><div className={current&&differences?'pvBad':''}><small>差异 / 未取得</small><strong>{current?differences:0} 项</strong><span>定位到具体设备与参数</span></div><div><small>厂家依据</small><strong>待确认</strong><span>读回相同不等于运行放行</span></div></div>
  {!data.prerequisite_ready&&<div className="mwPrereq"><b>等待步骤05有效结果</b><span>步骤03至05须基于当前模型完成；储能只读验证异常需先处理。SOC单向限制不阻断配置读取。</span><button onClick={back}>返回 05 储能通信</button></div>}
