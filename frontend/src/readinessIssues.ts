@@ -2,7 +2,7 @@ import type {Model} from './types'
 import {communicationBuses,sharedKeys} from './communication'
 import {generateSettings} from './settingsCatalog'
 import {projectFramework} from './projectTopology'
-export type Issue={id:string;category:'缺失信息'|'设置冲突'|'待厂家确认';layer:string;object:string;message:string;action:string;nodeId?:string;label?:string;rowId?:string;mergeKey?:string;subject?:string}
+export type Issue={m1Step?:number;id:string;category:'缺失信息'|'设置冲突'|'待厂家确认';layer:string;object:string;message:string;action:string;nodeId?:string;label?:string;rowId?:string;mergeKey?:string;subject?:string}
 export type Validation={valid:boolean;errors:string[];warnings:string[]}
 export function readinessIssues(model:Model,result?:Validation|null):Issue[]{
  const issues:Issue[]=[]

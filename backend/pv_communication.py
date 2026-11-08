@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from .domain import digest
 from .fleet import groups_for
+from .m1_inheritance import environment_model
 from .meter_workflow import states
 
 
@@ -81,7 +82,7 @@ def register_pv_communication(app,db):
                 if progress[6]['current'] and progress[6]['record']['status']=='PASS':complete=progress[6]['record']
         controller=session['route']['ems']['node_id'] if session else next((n['node_id'] for n in model['nodes'] if n['node_type']=='EMS'),None)
         stale=digest(db.get(plan['project'])['model'])!=plan['engineering_hash']
-        return plan,session,inventory(model,controller),complete,stale
+        return plan,session,inventory(environment_model(model,mode),controller),complete,stale
 
     @app.get('/api/plans/{id}/pv-communication')
     def listing(id:str,session_id:str='',mode:Literal['SIMULATION','REAL']='SIMULATION'):

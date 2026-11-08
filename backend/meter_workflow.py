@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from .domain import digest
 from .session_scope import preflight, freeze
+from .m1_inheritance import environment_model
 from .iems_selfcheck import selfcheck, SCENARIOS
 from .meter_detail import enrich, EXTRA
 
@@ -87,11 +88,11 @@ def simulate(step,scenario,route):
     return dict(status='PASS' if passed else 'FAIL',checks=checks,samples=samples,code='SIM_CRITERIA_MET' if passed else {'timeout':'METER_TIMEOUT','wrong_identity':'IDENTITY_MISMATCH','stale':'DATA_STALE','frozen':'DATA_FROZEN','bad':'BAD_QUALITY','scale':'SCALING_MISMATCH','reverse':'DIRECTION_MISMATCH','gap':'SAMPLE_GAP'}[scenario],source='SIMULATOR',field_result=None,manufacturer_basis='PENDING',criteria_version='SIM-METER-SEQ-1',exit_state='NO_PHYSICAL_ACTION')
 
 def register_meter_workflow(app,db):
-    def context(id):
+    def context(id,mode=None):
         try:p=db.record(id)
         except KeyError:raise HTTPException(404,'调试依据不存在')
         if p['kind']!='plan':raise HTTPException(404,'调试依据不存在')
-        m=p['system_context_baseline'];nodes={n['node_id']:n for n in m['nodes']};ports={x['port_id']:x for x in m['ports']};routes=[]
+        m=environment_model(p['system_context_baseline'],mode) if mode else p['system_context_baseline'];nodes={n['node_id']:n for n in m['nodes']};ports={x['port_id']:x for x in m['ports']};routes=[]
         for e in m['edges']:
             a,b=ports[e['from_port_id']],ports[e['to_port_id']]
             if e['edge_type']!='COMMUNICATION' or {nodes[a['node_id']]['node_type'],nodes[b['node_id']]['node_type']}!={'METER','EMS'}:continue
@@ -100,14 +101,14 @@ def register_meter_workflow(app,db):
         return p,m,routes,digest(db.get(p['project'])['model'])!=p['engineering_hash']
     @app.get('/api/plans/{id}/meter-workflow')
     def listing(id:str,mode:Literal['SIMULATION','REAL']='SIMULATION'):
-        p,m,routes,stale=context(id)
+        p,m,routes,stale=context(id,mode)
         sessions=[s for s in db.records('meter_session',id) if s['mode']==mode]
         attempts={s['id']:db.records('meter_run',s['id']) for s in sessions}
         results={sid:states(records) for sid,records in attempts.items()}
         return dict(model=m,routes=routes,stale=stale,sessions=sessions,progress=results,attempts=attempts,basis=BASIS,preflights={r['edge_id']:preflight(m,r) for r in routes},real_connected=False,version='M2-SEQUENCE-1')
     @app.post('/api/plans/{id}/meter-workflow')
     def start(id:str,body:Start):
-        p,m,routes,stale=context(id)
+        p,m,routes,stale=context(id,body.mode)
         if stale:raise HTTPException(409,'模型已变化，请先更新调试依据')
         if not body.acknowledged or not body.operator.strip() or not body.reference.strip():raise HTTPException(422,'请填写责任人、条件依据并确认本次范围')
         if body.witness_requirement!='NONE' and not body.witness_name.strip():raise HTTPException(422,'请填写见证人或见证组织')
@@ -138,6 +139,7 @@ def register_meter_workflow(app,db):
         try:s=db.record(session_id)
         except KeyError:raise HTTPException(404,'调试会话不存在')
         if s['kind']!='meter_session' or s['project']!=id:raise HTTPException(404,'调试会话不属于当前项目依据')
+        if s.get('snapshot',{}).get('inheritance_version')=='M1-ENV-1':m=environment_model(m,s['mode'])
         if body.request_id:
             try:previous=db.record(run_id(session_id,body.request_id))
             except KeyError:previous=None

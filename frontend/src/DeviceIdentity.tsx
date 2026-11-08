@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect,useState} from 'react'
 import type {Model,Node} from './types'
 import type {WorkEnvironment} from './M1Start'
 import './deviceIdentity.css'
@@ -6,11 +6,12 @@ type Identity={sn:string;firmware:string;factory_firmware:string;location:string
 const labels={OFFLINE:'离线草案',SIMULATION:'模拟记录',REAL:'现场待核验'}
 export function identityRecord(n:Node,env:WorkEnvironment):Partial<Identity>{return ((n.attributes?.identity_records||{}) as Record<string,Identity>)[env]||{}}
 const structures=['PCC','TRANSFORMER_ZONE','TRANSFORMER','LV_BUS','MV_BUS','FEEDER','BREAKER']
-export function DeviceIdentity({model,save,environment,back,next}:{model:Model;save:(m:Model)=>Promise<void>;environment:WorkEnvironment;back:()=>void;next:()=>void}){
+export function DeviceIdentity({model,save,environment,back,next,focusNode}:{model:Model;save:(m:Model)=>Promise<void>;environment:WorkEnvironment;back:()=>void;next:()=>void;focusNode?:string}){
  const [selected,setSelected]=useState(''),[form,setForm]=useState<Partial<Identity>>({}),[scan,setScan]=useState(''),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[search,setSearch]=useState(''),[expanded,setExpanded]=useState<string[]>([])
  const [manufacturer,setManufacturer]=useState(''),[modelName,setModelName]=useState(''),[reference,setReference]=useState(''),[template,setTemplate]=useState('CUSTOM')
  const devices=model.nodes.filter(n=>n.device_asset_id),node=devices.find(n=>n.node_id===selected),asset=model.device_assets.find(a=>a.asset_id===node?.device_asset_id),dm=model.device_models.find(m=>m.model_id===asset?.model_id),own=dm?.manufacturer.toUpperCase().includes('LIVOLTEK')
  const options=model.nodes.filter(n=>!n.device_asset_id&&structures.includes(n.node_type)),circuits=options.filter(n=>['FEEDER','BREAKER'].includes(n.node_type)||!!(n.attributes?.engineering as Record<string,string>)?.circuit_id)
+ useEffect(()=>{const n=devices.find(n=>n.node_id===focusNode);if(n)open(n)},[focusNode]);
  function field(k:keyof Identity,v:string){setForm(f=>({...f,[k]:v}));setMessage('')}
  function open(n:Node){const a=model.device_assets.find(x=>x.asset_id===n.device_asset_id),m=model.device_models.find(x=>x.model_id===a?.model_id),r=identityRecord(n,environment);setSelected(n.node_id);setForm({...r,structure:r.structure||n.parent_node_id||'',circuit:r.circuit||''});setScan('');setError('');setMessage('');setManufacturer(r.third_party?.manufacturer||m?.manufacturer||'');setModelName(r.third_party?.model||m?.model_name||'');setReference(r.third_party?.reference||String(m?.datasheet_ref||''));setTemplate(r.third_party?.template||(n.node_type==='METER'?'METER':n.node_type==='SWITCH'?'SWITCH':'CUSTOM'));setTimeout(()=>document.getElementById('device-identity-editor')?.scrollIntoView({block:'start'}),0)}
  function parse(){try{const q=JSON.parse(scan);if(!q||q.manufacturer!=='LIVOLTEK'||typeof q.model!=='string'||typeof q.sn!=='string'||!q.sn.trim())throw Error('二维码需包含 manufacturer、model 和 sn。');if((q.simulation===true||q.sn.startsWith('SIM-'))&&environment!=='SIMULATION')throw Error('演示二维码只用于模拟环境，不能写入离线或现场身份。');if(!dm||![dm.model_id,dm.model_name].includes(q.model))throw Error('二维码型号与当前设备不一致，请厂家核对；不会套用近似型号。');if(q.sn.length>128)throw Error('SN 长度超限。');setForm(f=>({...f,sn:q.sn.trim(),factory_firmware:typeof q.firmware==='string'?q.firmware:'',source:environment==='SIMULATION'?'SIMULATION_QR':'QR_UNVERIFIED',raw_scan:scan}));setError('');setMessage('已匹配项目中的厂家型号资料；资料为草案，待厂家核验。二维码固件仅作出厂信息，不作为现场读回。')}catch(e){setError(e instanceof SyntaxError?'二维码格式无法识别，请厂家提供有效产品标识或数据包。':(e as Error).message)}}

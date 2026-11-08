@@ -1,3 +1,4 @@
+from .m1_inheritance import environment_model
 """Step05 read-only BESS capability snapshots. Synthetic fixtures, never hardware I/O."""
 from datetime import datetime, timezone
 from typing import Literal
@@ -95,7 +96,7 @@ def register_bess_communication(app,db):
                 if candidate and pcc and candidate['pcc_evidence_id']==pcc['id'] and candidate['model_hash']==p['engineering_hash'] and candidate['failed']==0:pv=candidate
         stale=digest(db.get(p['project'])['model'])!=p['engineering_hash']
         controller=s['route']['ems']['node_id'] if s else next((n['node_id'] for n in p['system_context_baseline']['nodes'] if n['node_type']=='EMS'),None)
-        return p,s,inventory(p['system_context_baseline'],controller),pv,stale
+        return p,s,inventory(environment_model(p['system_context_baseline'],mode),controller),pv,stale
 
     @app.get('/api/plans/{id}/bess-communication')
     def listing(id:str,session_id:str='',mode:Literal['SIMULATION','REAL']='SIMULATION'):
