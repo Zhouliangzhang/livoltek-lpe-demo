@@ -6,6 +6,7 @@ import importlib.util
 import json
 from .l5_settings import validate_settings
 from .m1_identity import identity_errors
+from .m1_metering import METERING_SCHEMA, metering_checks
 from .m1_electrical import DRAFT_SCHEMA, electrical_errors
 from .m1_network import NETWORK_SCHEMA, network_errors
 from .m1_communication_settings import SETTINGS_SCHEMA, settings_checks
@@ -29,6 +30,7 @@ SCHEMA['properties']['project']['properties']['electrical_drafts'] = DRAFT_SCHEM
 
 SCHEMA['properties']['project']['properties']['network_drafts'] = NETWORK_SCHEMA
 SCHEMA['properties']['project']['properties']['communication_settings'] = SETTINGS_SCHEMA
+SCHEMA['properties']['project']['properties']['metering_settings'] = METERING_SCHEMA
 SCHEMA['properties']['device_models']['items']['properties']['communication_templates'] = {
     'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
         'required': ['id', 'version', 'master_data_version', 'domain', 'reference_doc', 'status', 'values'],
@@ -54,6 +56,9 @@ def validate(model):
         return {'valid': False, 'errors': errors, 'warnings': []}
     errors += legacy.semantic_errors(model) + legacy.system_semantic_errors(model) + identity_errors(model) + electrical_errors(model) + network_errors(model)
     communication_errors, warnings = settings_checks(model)
+    metering_errors, metering_warnings = metering_checks(model)
+    errors += metering_errors
+    warnings += metering_warnings
     errors += communication_errors
     sets = {}
     for collection, key in [('nodes','node_id'), ('ports','port_id'), ('edges','edge_id'),
