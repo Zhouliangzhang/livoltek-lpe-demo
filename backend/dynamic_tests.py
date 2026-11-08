@@ -15,6 +15,7 @@ class DynamicCommand(BaseModel):
     fault_node:str|None=None
     mitigation:bool=False
     recover:bool=False
+    recovery_order:Literal['simultaneous','meter_first','pv_first','meter_only','pv_only']='simultaneous'
     support_capacity:Literal['limited','available']='limited'
 
 def approach(actual,target,rate):

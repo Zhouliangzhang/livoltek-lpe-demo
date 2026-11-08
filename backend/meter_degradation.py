@@ -14,13 +14,21 @@ def simulate_meter(model, body, preflight):
     if compound and reject_id not in [d['node_id'] for d in p['pv']]:
         raise HTTPException(422, '复合异常的拒令设备必须是本控制域的光伏设备')
     detected, fresh, resume = 10 + body.delay_s + 1, 28 + body.delay_s, 31 + body.delay_s
+    meter_restore, pv_restore = (28,28)
+    if compound:
+        meter_restore, pv_restore = {'simultaneous':(28,28),'meter_first':(20,36),'pv_first':(36,20),'meter_only':(20,float('inf')),'pv_only':(float('inf'),20)}[body.recovery_order]
+    if not body.recover:meter_restore = pv_restore = float('inf')
+    fresh = meter_restore + body.delay_s
+    duration = 80 if compound else 60
+    ready_since = None
+    compound_resume = None
     pv = [min(1250, 125*np, 800+30*nb-25)/np]*np
     bess = [min(30, max(-70, (min(1250,125*np)-800+25)/nb))]*nb
     stuck_power = pv[0]
     trace = []
     last_pv, last_bess = sum(pv), sum(bess)
     last_valid = 0.0
-    for k in range(121):
+    for k in range(int(duration/DT)+1):
         t = k*DT
         middle = 10 <= t < 24
         load = (400 if middle else 1200 if t >= 24 else 800) if body.scenario == 'load_step' else 800
@@ -29,14 +37,21 @@ def simulate_meter(model, body, preflight):
         if compound and t >= 10:
             load = 20  # Explicit low-load stress fixture, never a controller input.
             cap = (5 if body.support_capacity == 'limited' else 30)*nb
-        reject_active = compound and t >= 10 and (not body.recover or t < 28)
+        reject_active = compound and t >= 10 and t < pv_restore
         previous = trace[max(0,k-int(body.delay_s/DT))] if trace else dict(grid=800+sum(bess)-sum(pv),pv=sum(pv),bess=sum(bess),charge_cap=30*nb,available=min(1250,125*np))
         valid = t < 10 or (body.recover and t >= fresh)
         meter = previous['grid'] if valid else None
         quality = 'GOOD' if valid else 'TIMEOUT' if body.fault in ('meter_comm_loss','meter_pv_reject') else 'OUT_OF_RANGE'
         if valid:
             last_valid = max(0,t-body.delay_s)
-        degraded = body.mitigation and t >= detected and (not body.recover or t < resume)
+        pv_observation = next((d for d in previous.get('devices',[]) if d['node_id']==reject_id),None)
+        pv_verified = compound and not reject_active and t >= pv_restore+body.delay_s and pv_observation is not None and pv_observation['status']=='MATCHED'
+        if compound and t >= 10:
+            if valid and pv_verified:
+                if ready_since is None:ready_since=t
+                if t-ready_since >= 3 and compound_resume is None:compound_resume=t
+            else:ready_since=None
+        degraded = body.mitigation and t >= detected and ((compound_resume is None) if compound else (not body.recover or t < resume))
         observed_reject = next((d['actual'] for d in previous.get('devices',[]) if d['node_id']==reject_id),0) if reject_active else 0
         if degraded:
             # Conservative demonstration only: no guessed load, last good value,
@@ -59,8 +74,17 @@ def simulate_meter(model, body, preflight):
             bess[i] = max(-70,min(cap/nb,approach(bess[i],cb/nb,10)))
             devices.append(dict(node_id=d['node_id'],kind='BESS',command=round(cb/nb,4),actual=round(bess[i],4),status='TRACKING' if abs(cb/nb-bess[i])>.5 else 'MATCHED'))
         grid = load+sum(bess)-sum(pv)
-        trace.append(dict(time=t,load=load,available=available,charge_cap=cap,pv=round(sum(pv),4),bess=round(sum(bess),4),grid=round(grid,4),meter=meter,meter_raw=meter if valid else None if body.fault in ('meter_comm_loss','meter_pv_reject') else 1e9,meter_quality=quality,meter_age_s=round(t-last_valid,2),feedback_state=state,closed_loop=valid and not degraded,pv_command=round(cp,4),bess_command=round(cb,4),eligible_bess=nb,devices=devices,compound=compound,rejected_pv_kw=round(observed_reject,4),support_gap_kw=round(max(0,observed_reject-previous['charge_cap']),4) if degraded else 0,control_alarm=('FEEDBACK_AND_CONTROL_LOST' if not valid and reject_active else 'FEEDBACK_UNAVAILABLE' if not valid else 'RECOVERY_OBSERVATION' if degraded else 'NONE') if compound else None))
+        recovery_gate = ('WAIT_METER' if not valid else 'WAIT_PV' if not pv_verified else 'OBSERVING' if compound_resume is None else 'RESTORING') if compound and t>=10 else 'NORMAL'
+        trace.append(dict(meter_recovered=valid,pv_recovered=pv_verified,pv_recovery_state='REFUSING' if reject_active else 'VERIFIED' if pv_verified else 'VERIFYING',recovery_gate=recovery_gate,qualification_elapsed_s=round(t-ready_since,2) if ready_since is not None else 0,time=t,load=load,available=available,charge_cap=cap,pv=round(sum(pv),4),bess=round(sum(bess),4),grid=round(grid,4),meter=meter,meter_raw=meter if valid else None if body.fault in ('meter_comm_loss','meter_pv_reject') else 1e9,meter_quality=quality,meter_age_s=round(t-last_valid,2),feedback_state=state,closed_loop=valid and not degraded,pv_command=round(cp,4),bess_command=round(cb,4),eligible_bess=nb,devices=devices,compound=compound,rejected_pv_kw=round(observed_reject,4),support_gap_kw=round(max(0,observed_reject-previous['charge_cap']),4) if degraded else 0,control_alarm=('FEEDBACK_AND_CONTROL_LOST' if not valid and reject_active else 'FEEDBACK_UNAVAILABLE' if not valid else 'RECOVERY_OBSERVATION' if degraded else 'NONE') if compound else None))
     settled_at = next((trace[i+6]['time'] for i in range(len(trace)-6) if trace[i]['time'] >= resume and all(s['closed_loop'] and abs(s['grid']-25)<=5 for s in trace[i:])),None) if body.recover else None
+    if compound:
+        # Alarm qualification uses only samples available at each time, never future data.
+        for i,sample in enumerate(trace):
+            window=trace[max(0,i-6):i+1]
+            stable=len(window)==7 and all(v['closed_loop'] and v['meter_recovered'] and v['pv_recovered'] and abs(v['grid']-25)<=5 and v['meter'] is not None and abs(v['meter']-25)<=5 and all(d['status']=='MATCHED' for d in v['devices']) for v in window)
+            sample['alarm_active']=sample['time']>=10 and not stable
+            if sample['time']>=10 and stable:sample['recovery_gate']='STABLE'
+        settled_at=next((s['time'] for s in trace if s['time']>=10 and not s['alarm_active']),None) if not trace[-1]['alarm_active'] else None
     if settled_at is not None:
         for s in trace:
             if s['time'] >= settled_at:s['feedback_state']='NORMAL'
@@ -76,14 +100,15 @@ def simulate_meter(model, body, preflight):
     route=[dict(edge_id=e['edge_id'],**{'from':e['from_port_id'],'to':e['to_port_id']}) for e in model['edges'] if e['edge_type']=='COMMUNICATION' and meter_id in (ports[e['from_port_id']]['node_id'],ports[e['to_port_id']]['node_id'])]
     result = dict(scenario=body.scenario,title=SCENARIOS[body.scenario]+' · '+events[0]['label'],mode='SIMULATION',source='SIMULATOR',version='M2-METER-DEGRADATION-1',field_result=None,manufacturer_basis='PENDING',status='ANOMALY',ems=preflight['ems'],meter=meter_id,trace=trace,events=events,control_events=stages,
         issues=[dict(node_id=meter_id,time=10,code='METER_COMMUNICATION_LOSS' if body.fault in ('meter_comm_loss','meter_pv_reject') else 'METER_INVALID_DATA',layer='L4',reason='无有效并网点反馈，不能确认实际馈网。演练策略为光伏降至零、储能回零且不放电；保持通信的设备假设接受指令。异常阈值、持续时间、联锁、设备拒令处置与恢复授权待厂家确认。历史异常在恢复后保留。',route=route)],
-        settings=dict(delay_s=body.delay_s,duration_s=60,mitigation=body.mitigation,recover=body.recover,fault=body.fault,fault_node=meter_id,policy_basis='PENDING',note='独立合成模型；计量失效期间不用真实模型功率或最后有效值继续闭环。失联无接收值；异常值注入 1×10⁹ kW 并拒用。降级仅是假设光伏可限至零、储能接受零功率指令；没有 SOC / BMS 或保护联锁模型。检测时限、3 秒观察、调节斜率均待厂家确认。'),
+        settings=dict(delay_s=body.delay_s,duration_s=duration,mitigation=body.mitigation,recover=body.recover,fault=body.fault,fault_node=meter_id,policy_basis='PENDING',note='独立合成模型；计量失效期间不用真实模型功率或最后有效值继续闭环。失联无接收值；异常值注入 1×10⁹ kW 并拒用。降级仅是假设光伏可限至零、储能接受零功率指令；没有 SOC / BMS 或保护联锁模型。检测时限、3 秒观察、调节斜率均待厂家确认。'),
         recovery=dict(state='RECOVERED' if settled_at is not None else 'FEEDBACK_UNAVAILABLE' if not body.recover else 'UNSETTLED',node_id=meter_id,final_eligible_bess=nb,final_grid_kw=trace[-1]['grid'],basis='PENDING',note='恢复仅为模拟判定；失去反馈时现场馈网未知。'),
         metrics=dict(peak_export_kw=max(0,-min(s['grid'] for s in trace)),export_duration_s=sum(DT for s in trace[:-1] if s['grid']<0),export_energy_kwh=round(sum(max(0,-s['grid'])*DT/3600 for s in trace[:-1]),4),final_grid_kw=trace[-1]['grid'],events=[dict(time=10,response_delay_s=detected-10 if body.mitigation else None,settling_s=settled_at-10 if settled_at is not None else None)]))
 
     if compound:
         result['title'] = '复合异常：零馈表失联 + ' + reject_id + ' 拒绝限功率'
-        result['version'] = 'M2-COMPOUND-1'
-        result['settings'].update(reject_node=reject_id,support_capacity=body.support_capacity)
+        result['version'] = 'M2-COMPOUND-2'
+        result['settings'].update(reject_node=reject_id,support_capacity=body.support_capacity,recovery_order=body.recovery_order,meter_restore_s=meter_restore if meter_restore!=float('inf') else None,pv_restore_s=pv_restore if pv_restore!=float('inf') else None)
+        result['settings']['recovery_basis']='独立注入恢复不等于验证通过。需新鲜计量、光伏指令反馈一致并同时观察 3 秒，再恢复闭环；计量与功率进入目标带且全部设备反馈一致持续 3 秒才解除模拟告警。时间、容差、联锁与授权均待厂家确认。'
         result['settings']['note'] = '独立合成模型；零馈表失联期间无有效计量。指定光伏拒绝降功率，其余光伏接受降零指令；储能按合成可用容量协助充电。检测与恢复时序待厂家确认。 复合演练在 10 秒后将负载设为 20 kW；储能每台充电上限为 5 kW（受限）或 30 kW（充足）。负载为模型真值，不进入失联控制算法。储能仅按延迟的拒令光伏设备输出及可用充电上限尝试吸收，不放电，不推定 SOC 无限可用。'
         result['events'][0]['label'] = '零馈表失联 + 光伏拒令 + 低负载 20 kW'
         result['issues'][0]['reason'] = '零馈表失联，实际馈网无法确认；正常光伏降零，储能依据仍有效的设备反馈尝试吸收拒令光伏输出。该开环配合不能保证零馈，策略及 BMS / SOC 联锁待厂家确认。'
@@ -92,7 +117,17 @@ def simulate_meter(model, body, preflight):
         for event in result['control_events']:
             if event['phase']=='DERATED':
                 event.update(label='限光伏 + 储能协助',detail='正常光伏降零；按拒令设备反馈尝试充电，受可用容量约束；告警保持，不宣告零馈。')
-        result['alarm'] = dict(severity='CRITICAL',active=settled_at is None,code='ZERO_EXPORT_NOT_ASSURED',meter_id=meter_id,pv_id=reject_id,final_model_export_kw=max(0,-trace[-1]['grid']),peak_support_gap_kw=max(s['support_gap_kw'] for s in trace),note='计量与控制能力同时受损，零馈无法保证；失联期间实际馈网未知。模型曲线仅展示演练后果，厂家协同尚未发送。')
+        result['control_events']=[e for e in result['control_events'] if e['phase'] in ('FAULT','DERATED')]
+        if meter_restore!=float('inf'):
+            result['control_events'].append(dict(time=fresh,phase='METER_RESTORED',label='零馈表反馈恢复',detail='新鲜计量可用；仍需独立验证光伏执行，单项恢复不解除告警。'))
+        if pv_restore!=float('inf'):
+            result['control_events'].append(dict(time=pv_restore,phase='PV_RESTORED',label='光伏接受指令',detail='解除拒令注入，实际功率逐步跟随；等待反馈一致，单项恢复不解除告警。'))
+        qualified=next((s['time'] for s in trace if s['recovery_gate']=='OBSERVING'),None)
+        if qualified is not None:result['control_events'].append(dict(time=qualified,phase='QUALIFYING',label='双项恢复观察',detail='计量有效且光伏指令反馈一致，同时连续观察 3 秒。'))
+        if compound_resume is not None:result['control_events'].append(dict(time=compound_resume,phase='RAMPING',label='恢复闭环 · 告警保持',detail='恢复功率分配；仍需计量、功率与设备响应持续稳定。'))
+        if settled_at is not None:result['control_events'].append(dict(time=settled_at,phase='NORMAL',label='解除模拟告警',detail='两项恢复并完成稳定观察；历史异常保留，非现场 SAT。'))
+        result['control_events'].sort(key=lambda e:e['time'])
+        result['alarm'] = dict(severity='CRITICAL',active=trace[-1]['alarm_active'],cleared_at_s=settled_at,code='ZERO_EXPORT_NOT_ASSURED',meter_id=meter_id,pv_id=reject_id,final_model_export_kw=max(0,-trace[-1]['grid']),peak_support_gap_kw=max(s['support_gap_kw'] for s in trace),note='计量与控制能力同时受损，零馈无法保证；失联期间实际馈网未知。模型曲线仅展示演练后果，厂家协同尚未发送。')
         result['recovery']['node_id']=meter_id+' + '+reject_id
-        if not body.recover:result['recovery']['state']='CONTROL_UNAVAILABLE'
+        if trace[-1]['alarm_active']:result['recovery']['state']='CONTROL_UNAVAILABLE'
     return result
