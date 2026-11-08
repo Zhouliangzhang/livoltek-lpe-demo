@@ -81,12 +81,15 @@ def simulate_case(kind,pvs,bess,meter,ems,fault,scenario,rid):
  return dict(key=kind,title=CASE_NAMES[kind],status='FAIL' if issues else 'PASS',prepared=prepared,restored=restored,events=events,samples=samples,commands=commands,issues=issues,notes=notes,source='SIMULATOR',original_state=dict(pv_limit_kw=125,bess_setpoint_kw=0,bess_mode='STANDBY',pcc_kw=100))
 
 
+def dynamic_context(db,id,sid,mode):
+ p,s,groups,bess,cap,ready=zero_context(db,id,sid,mode)
+ prior=next((r for r in db.records('zero_export',sid) if r['mode']==mode),None) if s and s['mode']==mode else None
+ ready=bool(ready and prior and prior['status']=='PASS' and prior['restored'] and not prior['alarm_latched'] and prior['bess_control_id']==bess['id'])
+ return p,s,groups,prior,cap,ready
+
+
 def register_dynamic_response(app,db):
- def context(id,sid,mode):
-  p,s,groups,bess,cap,ready=zero_context(db,id,sid,mode)
-  prior=next((r for r in db.records('zero_export',sid) if r['mode']==mode),None) if s and s['mode']==mode else None
-  ready=bool(ready and prior and prior['status']=='PASS' and prior['restored'] and not prior['alarm_latched'] and prior['bess_control_id']==bess['id'])
-  return p,s,groups,prior,cap,ready
+ def context(id,sid,mode):return dynamic_context(db,id,sid,mode)
  def recovered(r):return db.records('dynamic_response_recovery',r['id'])
  @app.get('/api/plans/{id}/dynamic-response')
  def listing(id:str,session_id:str='',mode:Literal['SIMULATION','REAL']='SIMULATION'):

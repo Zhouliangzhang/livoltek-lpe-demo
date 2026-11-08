@@ -1,0 +1,28 @@
+import {test,expect} from '@playwright/test'
+import fixture from '../../examples/ci20-pilot.json' with {type:'json'}
+test('degradation alarms require stable recovery and survive reload',async({page,request})=>{
+ const model=structuredClone(fixture);model.project.project_id+='-DEGRADE11';model.parameters.forEach(p=>{if(p.scope==='PROJECT')p.owner_id=model.project.project_id})
+ await request.post('/api/projects',{data:{model,expected_revision:0}})
+ const plan=await(await request.post(`/api/projects/${model.project.project_id}/plans`)).json(),base=`/api/plans/${plan.id}`
+ const session=await(await request.post(base+'/meter-workflow',{data:{mode:'SIMULATION',edge_id:'CI-072',acknowledged:true,operator:'降级恢复演练',reference:'独立合成测试'}})).json()
+ for(const step of ['selfcheck','route','identity','quality','reference','stability','complete'])await request.post(base+'/meter-workflow/'+session.id+'/run',{data:{step}})
+ for(const endpoint of ['pv-communication','bess-communication','configuration-readback','pv-control','bess-control','zero-export','dynamic-response'])expect((await request.post(base+'/'+endpoint,{data:{session_id:session.id,acknowledged:true,request_id:endpoint}})).ok()).toBeTruthy()
+ await page.goto('/');await page.getByLabel('选择项目').selectOption(model.project.project_id);await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
+ const go=()=>page.getByRole('navigation',{name:'调试顺序'}).getByRole('button',{name:/11 降级与恢复/}).click()
+ await go();const view=page.getByRole('region',{name:'降级与恢复测试'})
+ await view.getByRole('checkbox').check();await view.getByRole('button',{name:'执行模拟降级测试'}).click()
+ await expect(view.getByRole('status')).toContainText('3/3项原始模拟满足');await expect(view.getByRole('img',{name:'降级与恢复功率曲线'})).toBeVisible()
+ await view.getByRole('button',{name:'5s',exact:true}).click();await expect(view.locator('.dgReplay')).toContainText('反馈失效 · 不可判定');await expect(view.locator('.dgReplay')).toContainText('保持')
+ await view.getByLabel('降级演练场景').selectOption('bess_reject');await view.getByLabel('降级异常设备').selectOption('BESS_03');await view.getByLabel('降级恢复过程').selectOption('relapse');await view.getByRole('button',{name:'执行模拟降级测试'}).click()
+ await expect(view.getByRole('region',{name:'BESS_03 降级事件'})).toBeVisible()
+ await view.getByRole('button',{name:'25s',exact:true}).click();await expect(view.locator('.dgReplay')).toContainText('0 / 5点')
+ await view.getByRole('button',{name:'定位处理 BESS_03'}).click();await expect(page.getByRole('region',{name:'L5 作业区'})).toBeVisible()
+ await page.getByRole('button',{name:'返回 M2 调试',exact:true}).click();await go();await view.getByRole('checkbox').check()
+ await view.getByLabel('降级演练场景').selectOption('meter_lost');await view.getByLabel('降级恢复过程').selectOption('hold');await view.getByRole('button',{name:'执行模拟降级测试'}).click();await expect(view.getByRole('alert')).toContainText('告警保持')
+ await expect(view.getByRole('button',{name:'执行模拟降级测试'})).toBeDisabled()
+ await view.getByRole('button',{name:'验证原运行的模拟恢复'}).click();await expect(view).toContainText('独立合成重演未满足恢复及稳定要求')
+ await page.reload();await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click();await go();await expect(view.getByRole('alert')).toContainText('告警保持')
+ await view.getByRole('checkbox').check();await view.getByRole('button',{name:'验证原运行的模拟恢复'}).click();await expect(view.getByRole('status')).toContainText('模拟告警已解除')
+ await expect(view).toContainText('原失败记录保留')
+ await page.getByLabel('选择 iEMS 环境').selectOption('REAL');await go();await expect(view.getByRole('button',{name:'现场控制不可用'})).toBeDisabled();await expect(view.getByRole('status')).toHaveCount(0)
+})
