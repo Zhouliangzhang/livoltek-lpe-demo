@@ -16,6 +16,8 @@ class DynamicCommand(BaseModel):
     mitigation:bool=False
     recover:bool=False
     recovery_order:Literal['simultaneous','meter_first','pv_first','meter_only','pv_only']='simultaneous'
+    relapse:Literal['none','meter','pv']='none'
+    relapse_window:Literal['qualification','stabilization']='qualification'
     support_capacity:Literal['limited','available']='limited'
 
 def approach(actual,target,rate):
@@ -122,7 +124,7 @@ def register_dynamic_tests(app,db):
         configs=db.records('iems_configuration',p['project']);cfg=configs[0] if configs else None
         if not cfg or cfg['action']!='readback' or cfg['status']!='MATCHED' or cfg['model_hash']!=p['engineering_hash']:raise HTTPException(409,'请先在 M1 完成当前配置的模拟下发与读回一致性核对')
         result=dynamic_simulate(p['system_context_baseline'],body)
-        if body.mitigation and result['trace']:
+        if body.mitigation and result['trace'] and body.relapse == 'none':
             baseline=dynamic_simulate(p['system_context_baseline'],body.model_copy(update={'mitigation':False}))
             result['comparison']={'label':'相同扰动及故障持续时间，不启用降级的反事实模拟','trace':[{'time':s['time'],'grid':s['grid']} for s in baseline['trace']],'metrics':baseline['metrics']}
         return db.add('dynamic_test',id,{**result,'model_hash':p['engineering_hash'],'configuration_id':cfg['id']})
