@@ -14,6 +14,7 @@ from .sop import seed_templates, generate
 from .installation_tracking import register_tracking
 from .workbench import register_workbench
 from .fleet import register_fleet
+from .system_tests import register_system_tests
 from .commissioning import register_commissioning
 from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
@@ -69,6 +70,7 @@ def create_app(db_path=None):
     register_commissioning(app,db)
     register_workbench(app,db)
     register_fleet(app,db)
+    register_system_tests(app,db)
 
     def project(id):
         try:
