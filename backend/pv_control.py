@@ -5,6 +5,7 @@ from pydantic import BaseModel,Field
 from .domain import digest
 from .meter_workflow import states
 from .pv_communication import inventory
+from .m1_inheritance import environment_model
 
 PENDING=['现场控制租约、唯一指令所有者及EPC作业授权','型号/固件/驱动适用的批准控制测试规程','限功率点表、单位、确认语义与生效条件','功率响应容差/时限、光照条件与恢复/退出策略','M1批准配置与真实配置读回一致证据']
 
@@ -78,9 +79,10 @@ def control_context(db,id,sid,mode):
             def latest(kind):return next((r for r in db.records(kind,sid) if r['mode']==mode),None)
             pv=latest('pv_communication');bess=latest('bess_communication');candidate=latest('configuration_readback')
             if complete['current'] and complete['record']['status']=='PASS' and pv and bess and candidate and not pv['failed'] and not bess['failed'] and pv['pcc_evidence_id']==complete['record']['id'] and bess['pv_evidence_id']==pv['id'] and candidate['bess_evidence_id']==bess['id'] and pv['model_hash']==bess['model_hash']==candidate['model_hash']==p['engineering_hash'] and not any(candidate['counts'].get(k,0) for k in ('DIFFERENCE','UNREAD','UNIT_MISMATCH','TYPE_MISMATCH')):cfg=candidate
-    if s and s.get('m1_basis') and not s['m1_basis'].get('control_allowed'):cfg=None
+    # Field approval never grants or denies the isolated synthetic engine.
+    if mode!='SIMULATION' and s and s.get('m1_basis') and not s['m1_basis'].get('control_allowed'):cfg=None
     stale=digest(db.get(p['project'])['model'])!=p['engineering_hash']
-    groups=control_inventory(p['system_context_baseline'],s['route']['ems']['node_id'] if s else None)
+    groups=control_inventory(environment_model(p['system_context_baseline'],mode),s['route']['ems']['node_id'] if s else None)
     return p,s,groups,cfg,pv,stale
 
 def register_pv_control(app,db):

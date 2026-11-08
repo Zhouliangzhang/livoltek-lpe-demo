@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel,Field
 from .domain import digest
 from .degradation import degradation_context
-from .configuration_readback import inventory,compare
+from .configuration_readback import inventory,compare,session_inventory
 
 PENDING=['M1正常运行配置批准值、厂家点表与读回生效依据','撤销临时限值/充放电设定、测试租约及恢复正常控制所有者的规程','连续观察时长、采样间隔、数据时效与时钟质量判据','正常运行功率范围、SOC/BMS边界、告警及通信质量要求','现场iEMS身份、权限、日志持久化与现场见证记录']
 class Command(BaseModel):
@@ -18,8 +18,8 @@ class Command(BaseModel):
  fault_node:str=''
 
 
-def observe(model,ems,meter,scenario,pattern,fault,rid):
- devices=inventory(model);rows=[dict(node_id=d['node_id'],**compare(r,'normal')) for d in devices for r in d['parameters']]
+def observe(model,ems,meter,scenario,pattern,fault,rid,devices=None):
+ devices=devices if devices is not None else inventory(model);rows=[dict(node_id=d['node_id'],**compare(r,'normal')) for d in devices for r in d['parameters']]
  configuration=dict(rows=rows,pending_count=sum(r['status'] in ('PENDING','CANDIDATE_MATCH') for r in rows),approved_match_count=sum(r['status']=='MATCH' for r in rows),basis='M1批准/候选对照；合成读回，缺失依据不升级为批准')
  profiles=[dict(node_id=d['node_id'],kind=d['kind'],expected='正常控制所有者 / 测试租约释放' if d['kind']=='EMS' else '正常计量模式 / 无测试覆盖' if d['kind']=='METER' else '原限值125kW / 无临时覆盖' if d['kind']=='PV_INVERTER' else '原0kW待机 / 无临时覆盖',actual=None,status='PENDING',source='SIMULATOR') for d in devices]
  steps=[dict(key='withdraw',label='撤销临时测试设置',status='PASS',evidence='合成撤销临时限功率、充放电设定与故障注入'),dict(key='owner',label='恢复正常控制权',status='PASS',evidence='合成测试租约已释放，正常SIM-iEMS拥有控制权'),dict(key='readback',label='正常配置读回',status='PASS',evidence='SIM-NORMAL-1正常配置读回一致；M1批准缺项另列待确认')]
@@ -88,7 +88,7 @@ def register_continuous_observation(app,db):
   p,s,prior,ready=context(id,session_id,mode)
   records=[r for r in db.records('continuous_observation',session_id) if r['mode']==mode] if s and s['mode']==mode else []
   last=records[0] if records else None
-  return dict(records=records,current=bool(last and ready and last['degradation_id']==prior['id']),prerequisite_ready=ready,devices=inventory(p['system_context_baseline']),basis_pending=PENDING,physical_control_allowed=False)
+  return dict(records=records,current=bool(last and ready and last['degradation_id']==prior['id']),prerequisite_ready=ready,devices=session_inventory(p,s,mode),basis_pending=PENDING,physical_control_allowed=False)
  @app.post('/api/plans/{id}/continuous-observation')
  def execute(id:str,body:Command):
   if body.mode=='REAL':raise HTTPException(503,'真实iEMS未接入；未撤销现场设置、未取得现场连续观察证据，不能完成')
@@ -102,11 +102,13 @@ def register_continuous_observation(app,db):
    return old
   if not ready:raise HTTPException(409,'请先完成当前步骤11三类降级测试及稳定恢复；模型或前置变化后重新验证')
   if not body.acknowledged:raise HTTPException(422,'请确认撤销临时测试设置并执行独立模拟连续观察')
-  model=p['system_context_baseline'];devices=inventory(model);ems=s['route']['ems']['node_id'];meter=s['route']['meter']['node_id']
+  model=p['system_context_baseline'];devices=session_inventory(p,s,body.mode);ems=s['route']['ems']['node_id'];meter=s['route']['meter']['node_id']
   kind='PV_INVERTER' if body.scenario=='pv_loss' else 'BESS' if body.scenario in ('bess_loss','config_drift','normal_config_mismatch') else 'METER' if body.scenario in ('meter_loss','stale_data','power_export') else 'EMS'
-  allowed=[d['node_id'] for d in devices if d['kind']==kind];fault=body.fault_node or allowed[0]
+  allowed=[d['node_id'] for d in devices if d['kind']==kind]
+  if not allowed or ems not in {d['node_id'] for d in devices} or meter not in {d['node_id'] for d in devices}:raise HTTPException(409,'当前冻结范围缺少观察必需设备，请核对iEMS、零馈表及所选场景对象')
+  fault=body.fault_node or allowed[0]
   if fault not in allowed:raise HTTPException(422,'异常设备不属于所选场景')
-  result=observe(model,ems,meter,body.scenario,body.pattern,fault,rid)
+  result=observe(model,ems,meter,body.scenario,body.pattern,fault,rid,devices)
   scope=dict(model_hash=p['engineering_hash'],degradation_id=prior['id'],controller=ems,meter=meter,node_ids=[d['node_id'] for d in devices],test_pack='SIM-OBSERVE-1',normal_profile='SIM-NORMAL-1',physical_lease=False)
   result.update(mode=body.mode,source='SIMULATOR',field_result=None,manufacturer_basis='PENDING',physical_control_allowed=False,scope=scope,scope_hash=digest(scope),degradation_id=prior['id'],request_id=body.request_id,request_signature=signature,scenario=body.scenario,pattern=body.pattern,criteria=dict(window_seconds=20,sample_period_s=1,normal_pcc_kw=100,tolerance_kw=5,source='SIMULATION_ONLY'))
   saved=db.add_once('continuous_observation',s['id'],result,rid)

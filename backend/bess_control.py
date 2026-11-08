@@ -75,7 +75,8 @@ def register_bess_control(app,db):
         prior=next((r for r in db.records('pv_control',sid) if r['mode']==mode),None) if s and s['mode']==mode else None
         if not (prior and cfg and prior['configuration_id']==cfg['id'] and prior['passed']==len(prior['devices']) and not prior['failed'] and not prior['conditional'] and not prior['alarm_latched']):prior=None
         bess=next((r for r in db.records('bess_communication',sid) if r['mode']==mode),None) if s and s['mode']==mode else None
-        groups=inventory(p['system_context_baseline'],s['route']['ems']['node_id'] if s else None,'BESS');model=p['system_context_baseline'];ports={v['port_id']:v for v in model['ports']}
+        from .m1_inheritance import environment_model
+        groups=inventory(environment_model(p['system_context_baseline'],mode),s['route']['ems']['node_id'] if s else None,'BESS');model=p['system_context_baseline'];ports={v['port_id']:v for v in model['ports']}
         for g in groups:
             for d in g['devices']:d['control_valid']=any(e['edge_type']=='CONTROL' and ports[e['from_port_id']]['node_id']==d['controller'] and ports[e['to_port_id']]['node_id']==d['node_id'] for e in model['edges'])
         return p,s,groups,prior,bess,stale

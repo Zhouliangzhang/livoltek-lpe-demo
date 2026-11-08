@@ -62,7 +62,13 @@ def session_inventory(plan,session,mode):
     if package['environment']!=mode:raise HTTPException(409,'配置基线环境不匹配')
     from .m1_delivery import inventory as frozen_inventory
     b=package['baseline'];snapshot=b['snapshot'];result=[]
-    for device in frozen_inventory(b):
+    devices=frozen_inventory(b)
+    known={d['node_id'] for d in devices}
+    # A scoped dependency (especially the PCC meter) remains visible even before settings exist.
+    for nid,d in snapshot['devices'].items():
+        if nid not in known and snapshot['structure'][nid]['node_type'] in KINDS:
+            devices.append(dict(node_id=nid,name=d['name'],model=d.get('model_name'),serial_number=d.get('serial_number'),firmware=d.get('firmware'),parameters=[]))
+    for device in devices:
         nid=device['node_id'];kind=snapshot['structure'][nid]['node_type']
         if kind not in KINDS:continue
         rows=[]
