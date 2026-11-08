@@ -1,0 +1,28 @@
+import {test,expect} from '@playwright/test'
+import fixture from '../../examples/ci20-pilot.json' with {type:'json'}
+test('PV control distinguishes acknowledgement, response and recovery with persistent alarm',async({page,request})=>{
+ const model=structuredClone(fixture);model.project.project_id+='-CONTROL07';model.parameters.forEach(p=>{if(p.scope==='PROJECT')p.owner_id=model.project.project_id})
+ await request.post('/api/projects',{data:{model,expected_revision:0}})
+ const plan=await(await request.post(`/api/projects/${model.project.project_id}/plans`)).json(),base=`/api/plans/${plan.id}`
+ const session=await(await request.post(base+'/meter-workflow',{data:{mode:'SIMULATION',edge_id:'CI-072',acknowledged:true,operator:'控制演练测试',reference:'独立合成夹具'}})).json()
+ for(const step of ['selfcheck','route','identity','quality','reference','stability','complete'])await request.post(base+'/meter-workflow/'+session.id+'/run',{data:{step}})
+ for(const endpoint of ['pv-communication','bess-communication','configuration-readback'])await request.post(base+'/'+endpoint,{data:{session_id:session.id,acknowledged:true,request_id:endpoint}})
+ await page.goto('/');await page.getByLabel('选择项目').selectOption(model.project.project_id);await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
+ const go=()=>page.getByRole('navigation',{name:'调试顺序'}).getByRole('button',{name:/07 光伏控制/}).click()
+ await go();const view=page.getByRole('region',{name:'光伏限功率控制测试'})
+ await view.getByRole('checkbox').check();await view.getByLabel('光伏控制演练场景').selectOption('no_response');await view.getByLabel('光伏控制异常设备').selectOption('PV_03')
+ await view.getByRole('button',{name:'逐台执行模拟控制测试'}).click()
+ await expect(view.getByRole('status')).toContainText('2 台模拟满足 · 1 台异常 · 0 台条件未满足 · 7 台未执行')
+ const d=view.locator('.pvDevice').filter({hasText:'PV_03'})
+ await expect(d).toContainText('指令已接受但功率未响应');await expect(d).toContainText('模拟恢复已核验');await expect(d.getByRole('img')).toBeVisible()
+ await view.getByRole('button',{name:'定位处理 PV_03'}).click();await expect(page.getByRole('region',{name:'L5 作业区'})).toBeVisible()
+ await page.getByRole('button',{name:'返回 M2 调试',exact:true}).click();await go();await view.getByRole('checkbox').check()
+ await view.getByLabel('光伏控制演练场景').selectOption('restore_failed');await view.getByLabel('光伏控制异常设备').selectOption('PV_03');await view.getByRole('button',{name:'逐台执行模拟控制测试'}).click()
+ await expect(view.getByRole('alert')).toContainText('恢复未确认，告警保持')
+ await expect(view.getByRole('button',{name:'逐台执行模拟控制测试'})).toBeDisabled()
+ await page.reload();await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click();await go();await expect(view.getByRole('alert')).toContainText('恢复未确认，告警保持')
+ await view.getByRole('checkbox').check();await view.getByRole('button',{name:'复核模拟恢复（不启动新测试）'}).click()
+ await expect(view).toContainText('原失败记录保留');await expect(view.getByRole('button',{name:'逐台执行模拟控制测试'})).toBeEnabled()
+ await view.getByRole('button',{name:'逐台执行模拟控制测试'}).click();await expect(view.getByRole('status')).toContainText('10 台模拟满足 · 0 台异常')
+ await page.getByLabel('选择 iEMS 环境').selectOption('REAL');await go();await expect(view.getByRole('button',{name:'现场控制不可用'})).toBeDisabled();await expect(view.getByRole('status')).toHaveCount(0)
+})
