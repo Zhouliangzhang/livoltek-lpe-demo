@@ -1,0 +1,27 @@
+import {test,expect} from '@playwright/test'
+import fixture from '../../examples/ci20-pilot.json' with {type:'json'}
+test('step14 seals evidence into M3, retains faults and separates field handover',async({page,request})=>{
+ const model=structuredClone(fixture);model.project.project_id+='-HANDOVER14';model.parameters.forEach(p=>{if(p.scope==='PROJECT')p.owner_id=model.project.project_id})
+ await request.post('/api/projects',{data:{model,expected_revision:0}})
+ const plan=await(await request.post(`/api/projects/${model.project.project_id}/plans`)).json(),base=`/api/plans/${plan.id}`
+ const session=await(await request.post(base+'/meter-workflow',{data:{mode:'SIMULATION',edge_id:'CI-072',acknowledged:true,operator:'交接演练工程师',reference:'合成资料'}})).json()
+ for(const step of ['selfcheck','route','identity','quality','reference','stability','complete'])await request.post(base+'/meter-workflow/'+session.id+'/run',{data:{step}})
+ for(const endpoint of ['pv-communication','bess-communication','configuration-readback','pv-control','bess-control','zero-export','dynamic-response','degradation'])expect((await request.post(base+'/'+endpoint,{data:{session_id:session.id,acknowledged:true,request_id:endpoint}})).ok()).toBeTruthy()
+ await request.post(base+'/continuous-observation',{data:{session_id:session.id,acknowledged:true,request_id:'observation14',scenario:'pv_loss',fault_node:'PV_03',pattern:'persistent'}})
+ await page.goto('/');await page.getByLabel('选择项目').selectOption(model.project.project_id);await page.getByRole('button',{name:'M2 调试与 SAT',exact:true}).click()
+ const go14=()=>page.getByRole('navigation',{name:'调试顺序'}).getByRole('button',{name:/14 移交 M3/}).click()
+ await go14();const seal=page.getByRole('region',{name:'移交M3封存资料'})
+ await expect(seal.getByRole('button',{name:'封存模拟交接包',exact:true})).toBeDisabled()
+ await seal.getByRole('button',{name:'返回13核对报告',exact:true}).click();await page.getByRole('button',{name:'保存报告快照',exact:true}).click();await expect(page.locator('.satSnapshot')).toContainText('已保存')
+ await go14();await seal.getByRole('checkbox').check();await seal.getByRole('button',{name:'封存模拟交接包',exact:true}).click();await expect(seal.getByRole('status')).toContainText('模拟交接包已封存')
+ await seal.getByRole('button',{name:'进入 M3 查看交接包',exact:true}).click();const m3=page.getByRole('region',{name:'M3项目交接包'})
+ await expect(m3.getByRole('heading',{name:'模拟项目交接 · 资料与遗留事项'})).toBeVisible();await expect(m3.getByText('光伏通信中断',{exact:true})).toBeVisible()
+ await m3.getByRole('button',{name:'查看封存异常证据',exact:true}).click();await expect(m3.getByRole('region',{name:'封存原始证据详情'})).toContainText('模拟器 · 合成数据')
+ await m3.getByRole('button',{name:'收起封存证据',exact:true}).click()
+ const dp=page.waitForEvent('download');await m3.getByRole('link',{name:'下载完整交接包 ZIP',exact:true}).click();expect((await dp).suggestedFilename()).toContain('SIMULATION')
+ await m3.getByRole('button',{name:'定位处理 PV_03',exact:true}).click();await expect(page.getByRole('region',{name:'L4 作业区'})).toBeVisible()
+ await page.getByRole('button',{name:'返回 M3 交接包',exact:true}).click();await expect(m3.getByText('光伏通信中断',{exact:true})).toBeVisible()
+ await m3.getByRole('button',{name:'处理步骤12',exact:true}).click();await expect(page.getByRole('region',{name:'连续观察测试'})).toBeVisible()
+ await page.getByRole('button',{name:'返回 M3 交接包',exact:true}).click();await page.reload();await page.getByRole('button',{name:'M3 项目交接',exact:true}).click();await expect(m3.getByText('光伏通信中断',{exact:true})).toBeVisible()
+ await page.getByLabel('选择 iEMS 环境').selectOption('REAL');await expect(m3.getByText('尚无现场交接资料包',{exact:true})).toBeVisible();await expect(m3.getByRole('link',{name:'下载完整交接包 ZIP',exact:true})).toHaveCount(0)
+})

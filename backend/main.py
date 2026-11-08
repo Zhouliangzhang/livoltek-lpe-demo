@@ -28,6 +28,7 @@ from .dynamic_response import register_dynamic_response
 from .degradation import register_degradation
 from .continuous_observation import register_continuous_observation
 from .sat_report import register_sat_report
+from .handover import register_handover
 from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
 class Save(BaseModel):
@@ -91,6 +92,7 @@ def create_app(db_path=None):
     register_degradation(app,db)
     register_continuous_observation(app,db)
     register_sat_report(app,db)
+    register_handover(app,db)
     register_workbench(app,db)
     register_fleet(app,db)
     register_system_tests(app,db)
