@@ -35,6 +35,16 @@ class Remedy(BaseModel):
     actor:str=Field(default="",max_length=100)
     acknowledged:bool=False
 
+class Followup(BaseModel):
+    mode:Mode
+    item_id:str
+    role:Literal['EPC','MANUFACTURER']
+    actor:str=Field(min_length=1,max_length=100)
+    note:str=Field(min_length=1,max_length=2000)
+    document_ref:str=Field(min_length=1,max_length=300)
+    evidence_ids:list[str]=Field(min_length=1,max_length=20)
+    acknowledged:bool=False
+
 class Support(BaseModel):
     mode:Mode
 
@@ -170,8 +180,24 @@ def register_field_service(app,db):
         stale=db.get(project)['revision']!=c['current_revision']
         if stale:issue('stale','受理后工程版本已变化，需重新建立诊断上下文','EPC',0,'service-intake')
         issue('field-repair','未取得现场批准、实际执行、通信/计量复测及恢复确认；模拟证据不可替代','EPC / 授权现场工程师',2,'service-remedy')
+        processing=db.records('service_followup',cid)
+        latest={}
+        for entry in processing:latest.setdefault(entry['item_id'],entry)
+        resolved=[]
+        for item in pending:
+            item['handling']=latest.get(item['id'])
+            item['required_for_simulation']=True
+            if item['id']=='field-repair' and mode=='SIMULATION':item['text']='EPC现场资料补充演练：记录批准、执行与恢复资料引用；不替代真实现场证据'
+            entry=item['handling']
+            if entry and entry['status']=='SIMULATION_RESOLVED' and entry['revision']==c['current_revision']:
+                item['status']='模拟已处理 / 现场仍待核验';resolved.append(item)
+            elif entry:item['status']='资料已提交 / 待核验'
+        pending=[item for item in pending if item not in resolved]
+        closures=db.records('service_closure',cid)
+        closed=bool(closures)
+        can_close=mode=='SIMULATION' and not pending and not stale and any(r.get('simulation_recovered') for r in rs) and not closed
         evidence=[dict(id=r['id'],title=r['title'],created=r['created'],stage=stage,target=('diagnosis-' if stage==1 else 'remedy-')+str(r['step']),source=r['source'],summary=r.get('observation',r.get('summary','')),record=deepcopy(r)) for stage,items in [(1,ds),(2,rs)] for r in items]
-        return dict(case_id=cid,mode=mode,source='SIMULATOR' if mode=='SIMULATION' else 'FIELD_PREPARATION',symptom=c['symptom'],occurred_at=c['occurred_at'],reporter=c['reporter'],device=c['device'],device_id=c['device_id'],package_id=c['package_id'],baseline_hash=c['baseline_hash'],baseline_revision=c['baseline_revision'],intake_revision=c['current_revision'],current_revision=db.get(project)['revision'],changes=c['changes'],root_cause=ds[-1].get('conclusion') if ds else None,evidence=evidence,original_case=deepcopy(c),collaboration=deepcopy(support),pending=pending,simulation_recovered=any(r.get('simulation_recovered') for r in rs),field_repaired=False,can_close=False,service_status='OPEN',stale=stale,manufacturer_basis='PENDING',warranty='未判定')
+        return dict(case_id=cid,mode=mode,source='SIMULATOR' if mode=='SIMULATION' else 'FIELD_PREPARATION',symptom=c['symptom'],occurred_at=c['occurred_at'],reporter=c['reporter'],device=c['device'],device_id=c['device_id'],package_id=c['package_id'],baseline_hash=c['baseline_hash'],baseline_revision=c['baseline_revision'],intake_revision=c['current_revision'],current_revision=db.get(project)['revision'],changes=c['changes'],root_cause=ds[-1].get('conclusion') if ds else None,evidence=evidence,original_case=deepcopy(c),collaboration=deepcopy(support),pending=pending,resolved=resolved,handling_history=processing,closure=closures[0] if closures else None,simulation_recovered=any(r.get('simulation_recovered') for r in rs),field_repaired=False,can_close=can_close,service_status='SIMULATION_CLOSED' if closed else 'OPEN',stale=stale,manufacturer_basis='PENDING',warranty='未判定')
 
     @app.get('/api/projects/{project}/service/{cid}/report')
     def service_report(project:str,cid:str,mode:Mode='SIMULATION'):
@@ -183,7 +209,31 @@ def register_field_service(app,db):
         content=report_content(project,cid,body.mode)
         return db.add_once('service_report',cid,content,digest(dict(kind='service-report-v1',content=content)))
 
+    @app.post('/api/projects/{project}/service/{cid}/followup')
+    def process_followup(project:str,cid:str,body:Followup):
+        c=get_case(project,cid,body.mode)
+        current=report_content(project,cid,body.mode)
+        if current['closure']:raise HTTPException(409,'模拟服务单已关闭，保留记录；新问题请新建服务单')
+        if current['stale']:raise HTTPException(409,'工程版本已变化，重新建立诊断上下文后处理')
+        item=next((x for x in current['pending']+current['resolved'] if x['id']==body.item_id),None)
+        if not item or body.item_id not in ('manufacturer-1','manufacturer-2','manufacturer-3','manufacturer-4','field-repair'):raise HTTPException(422,'该事项需在原步骤完成，不能用资料说明替代')
+        expected='EPC' if body.item_id=='field-repair' else 'MANUFACTURER'
+        if body.role!=expected or not all(v.strip() for v in (body.actor,body.note,body.document_ref)) or not body.acknowledged:raise HTTPException(422,'填写对应处理方、资料编号/版本、处理说明并确认环境范围')
+        available={r['id']:r for r in db.records('service_remedy',cid) if r['mode']==body.mode and r['step']>=4}
+        if any(e not in available for e in body.evidence_ids):raise HTTPException(422,'只能关联本服务单同环境的复测或恢复证据')
+        required={'manufacturer-1':{4},'manufacturer-2':{4},'manufacturer-3':{5},'manufacturer-4':{6},'field-repair':{4,5,6}}[body.item_id]
+        if not required.issubset({available[e]['step'] for e in body.evidence_ids}):raise HTTPException(422,'缺少本事项必需的通信、计量或恢复证据')
+        entry=dict(**body.model_dump(),revision=c['current_revision'],status='SIMULATION_RESOLVED' if body.mode=='SIMULATION' else 'SUBMITTED_UNVERIFIED',field_approved=False,source='SIMULATOR' if body.mode=='SIMULATION' else 'USER_SUBMITTED')
+        record=db.add_once('service_followup',cid,entry,digest(dict(case=cid,entry=entry)))
+        report=freeze_service_report(project,cid,Support(mode=body.mode))
+        return dict(handling=record,report=report)
+
     @app.post('/api/projects/{project}/service/{cid}/close')
     def close_service(project:str,cid:str,body:Support):
         report=report_content(project,cid,body.mode)
-        raise HTTPException(409,dict(message='服务单保持打开：未完成项或待确认依据未解决，模拟恢复不能作为现场关单依据',pending=report['pending']))
+        if report['closure']:return report['closure']
+        if not report['can_close']:raise HTTPException(409,dict(message='必需事项未完成，或现场权限及真实证据未具备，不能关单',pending=report['pending']))
+        sealed=freeze_service_report(project,cid,body)
+        closure=db.add_once('service_closure',cid,dict(mode=body.mode,service_status='SIMULATION_CLOSED',field_repaired=False,field_approved=False,report_id=sealed['id'],resolution_ids=[r['handling']['id'] for r in report['resolved']],reason='模拟必需事项完成；不代表现场修复、厂家正式批准或保修结论'),digest(dict(case=cid,kind='simulation-close')))
+        freeze_service_report(project,cid,body)
+        return closure

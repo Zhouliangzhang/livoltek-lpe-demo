@@ -81,3 +81,32 @@ def test_m4_remedy_requires_approval_and_preserves_evidence(tmp_path):
     assert c.post(url+'/close',json={'mode':'SIMULATION'}).status_code==409
     current=c.app.state.store.get(pack['project']);c.app.state.store.save(current['model'],current['revision'])
     assert c.post(url+'/remedy',json=req).status_code==409
+
+
+def test_m4_followup_resolution_and_simulation_closure(tmp_path):
+    c,base,s,body,report=setup14(tmp_path)
+    pack=c.post(base+'/handover',json={**body,'report_id':report['id'],'prepared_by':'EPC','acknowledged':True}).json()
+    project=pack['project']; root=f'/api/projects/{project}/service'
+    case=c.post(root,json=dict(mode='SIMULATION',package_id=pack['id'],device_id='METER_PCC',reporter='EPC',symptom='失联',occurred_at='2026-11-09',safe_readonly=True,request_id='followup')).json()
+    url=root+'/'+case['id']
+    for i in range(1,6): c.post(url+'/diagnose',json=dict(mode='SIMULATION',step=i))
+    for i in range(1,7): c.post(url+'/remedy',json=dict(mode='SIMULATION',step=i,actor='Demo',acknowledged=True))
+    original=c.post(url+'/report',json={'mode':'SIMULATION'}).json()
+    evidence=[r['id'] for r in c.get(url+'?mode=SIMULATION').json()['remedy'] if r['step']>=4]
+    request=dict(mode='SIMULATION',item_id='manufacturer-1',role='MANUFACTURER',actor='模拟厂家工程师',note='演练依据核对完成',document_ref='SIM-BASIS-01 v1',evidence_ids=evidence,acknowledged=True)
+    assert c.post(url+'/followup',json={**request,'evidence_ids':['fake']}).status_code==422
+    assert c.post(url+'/followup',json={**request,'role':'EPC'}).status_code==422
+    assert c.post(url+'/close',json={'mode':'SIMULATION'}).status_code==409
+    for item in ['manufacturer-1','manufacturer-2','manufacturer-3','manufacturer-4','field-repair']:
+        r=c.post(url+'/followup',json={**request,'item_id':item,'role':'EPC' if item=='field-repair' else 'MANUFACTURER'})
+        assert r.status_code==200,r.text
+    current=c.get(url+'/report?mode=SIMULATION').json()
+    assert current['current']['can_close'] and len(current['current']['resolved'])==5
+    assert len(current['versions'])==6
+    closed=c.post(url+'/close',json={'mode':'SIMULATION'});assert closed.status_code==200,closed.text
+    assert closed.json()['service_status']=='SIMULATION_CLOSED' and not closed.json()['field_repaired']
+    assert c.post(url+'/close',json={'mode':'SIMULATION'}).json()['id']==closed.json()['id']
+    assert c.post(url+'/followup',json=request).status_code==409
+    assert c.post(url+'/close',json={'mode':'REAL'}).status_code==404
+    assert c.app.state.store.record(original['id'])==original
+    assert c.app.state.store.record(pack['id'])==pack
