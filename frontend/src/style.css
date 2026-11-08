@@ -7,3 +7,9 @@
 
 /* The document owns vertical scrolling, including over read-only diagrams. */
 html{overflow-y:scroll;scrollbar-gutter:stable}body,#root{min-height:100%;height:auto}.readonlyTopology .canvas{touch-action:pan-y}
+/* Keep the root scrolling viewport bounded to the browser, not the content height. */
+html{height:100%;min-height:100%;overflow-x:hidden;overflow-y:auto;scroll-behavior:auto}
+body{min-height:100vh;height:auto;overflow:visible}
+#root{min-height:100vh;height:auto;overflow:visible}
+.app{height:auto;overflow:visible}
+.appFieldset{min-width:0;max-width:100%}

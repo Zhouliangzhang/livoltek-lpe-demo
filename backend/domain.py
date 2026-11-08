@@ -56,6 +56,24 @@ def validate(model):
                     errors.append(f'控制域 {d["id"]} 的 {field} 引用无效')
         if boundary['timezone'] not in ('', 'Africa/Johannesburg', 'Asia/Shanghai', 'Europe/Berlin', 'Europe/London', 'America/New_York', 'Australia/Sydney', 'UTC'):
             errors.append('项目时区无效')
+    for n in nodes.values():
+        engineering = n.get('attributes', {}).get('engineering')
+        if engineering is None:
+            continue
+        if not isinstance(engineering, dict):
+            errors.append('电气结构工程信息格式无效')
+            continue
+        if engineering.get('basis_status') != 'PENDING':
+            errors.append('结构资料引用须保持待核验，不能直接标记批准')
+        if engineering.get('voltage_level') not in ('LV', 'MV'):
+            errors.append('结构设计电压等级无效')
+        if n['node_type'] in ('FEEDER', 'BREAKER') and not str(engineering.get('circuit_id', '')).strip():
+            errors.append('馈线和断路器需要回路编号')
+        if n['node_type'] not in ('PCC', 'TRANSFORMER_ZONE') and not n.get('parent_node_id'):
+            errors.append('电气结构需要明确所属结构')
+        parent = nodes.get(n.get('parent_node_id'))
+        if parent and (parent.get('device_asset_id') or parent['node_type'] not in ('PCC','TRANSFORMER_ZONE','TRANSFORMER','LV_BUS','MV_BUS','FEEDER','BREAKER')):
+            errors.append('电气结构必须归属有效的电气结构对象')
     for node in nodes.values():
         seen = set()
         current = node
