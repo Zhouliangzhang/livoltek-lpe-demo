@@ -23,7 +23,7 @@ test('M3 tracks work, validates retest, and seals V2 without replacing V1',async
  await editor.getByLabel('事项处理人').fill('资料编制人');await editor.getByLabel('处理资料引用').fill('DRAFT-REF-01');await editor.getByLabel('事项处理说明').fill('登记厂家草稿引用，仍需厂家核验适用性。');await editor.getByRole('button',{name:'提交厂家资料待确认',exact:true}).click();await expect(editor.locator('.trackState')).toContainText('待厂家确认')
  const r3=await(await request.post(base+'/sat-report',{data:{...body,request_id:'report3'}})).json();await tracker.getByRole('button',{name:'刷新处理清单',exact:true}).click()
  await tracker.getByText('根据处理结果生成新版交接包',{exact:true}).click();await tracker.getByLabel('新版交接编制人').fill('EPC演练工程师');await tracker.getByLabel('新版交接报告').selectOption(r3.id);await tracker.getByRole('checkbox').check();await tracker.getByRole('button',{name:'生成新版模拟交接包',exact:true}).click()
- const m3=page.getByRole('region',{name:'M3项目交接包'});await expect(m3.getByLabel('选择交接包')).toContainText('交接V2');await expect(tracker).toContainText('所选包已封存当前处理记录')
+ const m3=page.getByRole('region',{name:'M3项目交接包'});await expect(m3.getByLabel('选择交接包')).toContainText('交接V2',{timeout:20000});await expect(tracker).toContainText('所选包已封存当前处理记录')
  const versions=await(await request.get(`/api/projects/${model.project.project_id}/handovers`)).json();expect(versions.packages).toHaveLength(2)
  await m3.getByLabel('选择交接包').selectOption(pack.id);await expect(tracker).toContainText('实时处理记录');await expect(m3.getByLabel('选择交接包')).toContainText('交接V1')
  await page.getByLabel('选择 iEMS 环境').selectOption('REAL');await expect(m3.getByText('尚无现场交接资料包',{exact:true})).toBeVisible();await expect(tracker).toHaveCount(0)

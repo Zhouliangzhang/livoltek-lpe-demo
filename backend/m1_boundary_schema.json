@@ -1,0 +1,55 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "timezone": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "reference": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "status": {
+      "const": "DRAFT"
+    },
+    "domains": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "pcc_id": {
+            "type": "string"
+          },
+          "controller_id": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "pcc_id",
+          "controller_id",
+          "scope"
+        ]
+      }
+    }
+  },
+  "required": [
+    "timezone",
+    "scope",
+    "reference",
+    "status",
+    "domains"
+  ]
+}

@@ -1,5 +1,6 @@
 """Engineering contract: original schema plus explicit semantic checks."""
 import copy
+import json
 import hashlib
 import importlib.util
 import json
@@ -17,6 +18,8 @@ spec = importlib.util.spec_from_file_location('baseline_validator', BASE / 'vali
 legacy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(legacy)
 SCHEMA = load('engineering-model.schema.json')
+# Workbench extension; preserve the vendor baseline schema unchanged.
+SCHEMA['properties']['project']['properties']['system_boundary'] = json.loads((Path(__file__).with_name('m1_boundary_schema.json')).read_text(encoding='utf-8'))
 
 def digest(model):
     data = copy.deepcopy(model)
@@ -42,6 +45,17 @@ def validate(model):
             errors.append(f'Duplicate ID in {collection}')
     nodes = {x['node_id']: x for x in model['nodes']}
     ports = {x['port_id']: x for x in model['ports']}
+    boundary = model['project'].get('system_boundary')
+    if boundary:
+        domain_ids = [d['id'] for d in boundary['domains']]
+        if len(domain_ids) != len(set(domain_ids)):
+            errors.append('控制域编号不能重复')
+        for d in boundary['domains']:
+            for field, kind in [('pcc_id', 'PCC'), ('controller_id', 'EMS')]:
+                if d[field] and nodes.get(d[field], {}).get('node_type') != kind:
+                    errors.append(f'控制域 {d["id"]} 的 {field} 引用无效')
+        if boundary['timezone'] not in ('', 'Africa/Johannesburg', 'Asia/Shanghai', 'Europe/Berlin', 'Europe/London', 'America/New_York', 'Australia/Sydney', 'UTC'):
+            errors.append('项目时区无效')
     for node in nodes.values():
         seen = set()
         current = node
