@@ -63,25 +63,27 @@ class Command(BaseModel):
     fault_node:str=''
 
 
+def control_context(db,id,sid,mode):
+    try:
+        p=db.record(id)
+        if p['kind']!='plan':raise KeyError(id)
+    except KeyError:raise HTTPException(404,'调试依据不存在')
+    s=None;cfg=None;pv=None
+    if sid:
+        try:s=db.record(sid)
+        except KeyError:raise HTTPException(404,'会话不存在')
+        if s['kind']!='meter_session' or s['project']!=id:raise HTTPException(404,'会话不属于本项目')
+        if s['mode']==mode:
+            complete=states(db.records('meter_run',sid))[6]
+            def latest(kind):return next((r for r in db.records(kind,sid) if r['mode']==mode),None)
+            pv=latest('pv_communication');bess=latest('bess_communication');candidate=latest('configuration_readback')
+            if complete['current'] and complete['record']['status']=='PASS' and pv and bess and candidate and not pv['failed'] and not bess['failed'] and pv['pcc_evidence_id']==complete['record']['id'] and bess['pv_evidence_id']==pv['id'] and candidate['bess_evidence_id']==bess['id'] and pv['model_hash']==bess['model_hash']==candidate['model_hash']==p['engineering_hash'] and not any(candidate['counts'].get(k,0) for k in ('DIFFERENCE','UNREAD','UNIT_MISMATCH','TYPE_MISMATCH')):cfg=candidate
+    stale=digest(db.get(p['project'])['model'])!=p['engineering_hash']
+    groups=control_inventory(p['system_context_baseline'],s['route']['ems']['node_id'] if s else None)
+    return p,s,groups,cfg,pv,stale
+
 def register_pv_control(app,db):
-    def context(id,sid,mode):
-        try:
-            p=db.record(id)
-            if p['kind']!='plan':raise KeyError(id)
-        except KeyError:raise HTTPException(404,'调试依据不存在')
-        s=None;cfg=None;pv=None
-        if sid:
-            try:s=db.record(sid)
-            except KeyError:raise HTTPException(404,'会话不存在')
-            if s['kind']!='meter_session' or s['project']!=id:raise HTTPException(404,'会话不属于本项目')
-            if s['mode']==mode:
-                complete=states(db.records('meter_run',sid))[6]
-                def latest(kind):return next((r for r in db.records(kind,sid) if r['mode']==mode),None)
-                pv=latest('pv_communication');bess=latest('bess_communication');candidate=latest('configuration_readback')
-                if complete['current'] and complete['record']['status']=='PASS' and pv and bess and candidate and not pv['failed'] and not bess['failed'] and pv['pcc_evidence_id']==complete['record']['id'] and bess['pv_evidence_id']==pv['id'] and candidate['bess_evidence_id']==bess['id'] and pv['model_hash']==bess['model_hash']==candidate['model_hash']==p['engineering_hash'] and not any(candidate['counts'].get(k,0) for k in ('DIFFERENCE','UNREAD','UNIT_MISMATCH','TYPE_MISMATCH')):cfg=candidate
-        stale=digest(db.get(p['project'])['model'])!=p['engineering_hash']
-        groups=control_inventory(p['system_context_baseline'],s['route']['ems']['node_id'] if s else None)
-        return p,s,groups,cfg,pv,stale
+    def context(id,sid,mode):return control_context(db,id,sid,mode)
     def recovered(run):return bool(db.records('pv_control_recovery',run['id']))
 
     @app.get('/api/plans/{id}/pv-control')
