@@ -24,6 +24,7 @@ from .configuration_readback import register_configuration_readback
 from .pv_control import register_pv_control
 from .bess_control import register_bess_control
 from .zero_export import register_zero_export
+from .dynamic_response import register_dynamic_response
 from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
 class Save(BaseModel):
@@ -83,6 +84,7 @@ def create_app(db_path=None):
     register_pv_control(app,db)
     register_bess_control(app,db)
     register_zero_export(app,db)
+    register_dynamic_response(app,db)
     register_workbench(app,db)
     register_fleet(app,db)
     register_system_tests(app,db)

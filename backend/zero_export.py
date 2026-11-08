@@ -90,13 +90,16 @@ def simulate(pvs,bess,meter,ems,scenario,fault,rid):
  return result(restored)
 
 
+def zero_context(db,id,sid,mode):
+ p,s,groups,cfg,_,stale=control_context(db,id,sid,mode)
+ def latest(kind):return next((r for r in db.records(kind,sid) if r['mode']==mode),None) if s and s['mode']==mode else None
+ pv=latest('pv_control');bess=latest('bess_control');cap=latest('bess_communication')
+ ready=bool(cfg and not stale and pv and bess and cap and pv['configuration_id']==cfg['id'] and bess['pv_control_id']==pv['id'] and pv['passed']==len(pv['devices']) and bess['passed']==len(bess['devices']) and len(pv['devices'])>0 and len(bess['devices'])>0 and not pv['alarm_latched'] and not bess['alarm_latched'])
+ return p,s,groups,bess,cap,ready
+
+
 def register_zero_export(app,db):
- def context(id,sid,mode):
-  p,s,groups,cfg,_,stale=control_context(db,id,sid,mode)
-  def latest(kind):return next((r for r in db.records(kind,sid) if r['mode']==mode),None) if s and s['mode']==mode else None
-  pv=latest('pv_control');bess=latest('bess_control');cap=latest('bess_communication')
-  ready=bool(cfg and not stale and pv and bess and cap and pv['configuration_id']==cfg['id'] and bess['pv_control_id']==pv['id'] and pv['passed']==len(pv['devices']) and bess['passed']==len(bess['devices']) and len(pv['devices'])>0 and len(bess['devices'])>0 and not pv['alarm_latched'] and not bess['alarm_latched'])
-  return p,s,groups,bess,cap,ready
+ def context(id,sid,mode):return zero_context(db,id,sid,mode)
  def recovered(r):return db.records('zero_export_recovery',r['id'])
  @app.get('/api/plans/{id}/zero-export')
  def listing(id:str,session_id:str='',mode:Literal['SIMULATION','REAL']='SIMULATION'):
