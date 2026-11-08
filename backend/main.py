@@ -1,3 +1,4 @@
+from .field_service import register_field_service
 import copy
 import math
 import os
@@ -97,6 +98,7 @@ def create_app(db_path=None):
     register_continuous_observation(app,db)
     register_sat_report(app,db)
     register_handover(app,db)
+    register_field_service(app,db)
     register_m3_tracking(app,db)
     register_baselines(app,db)
     register_delivery(app,db)
