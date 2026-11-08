@@ -6,6 +6,7 @@ import importlib.util
 import json
 from .l5_settings import validate_settings
 from .m1_identity import identity_errors
+from .m1_electrical import DRAFT_SCHEMA, electrical_errors
 from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
@@ -22,6 +23,8 @@ SCHEMA = load('engineering-model.schema.json')
 # Workbench extension; preserve the vendor baseline schema unchanged.
 SCHEMA['properties']['project']['properties']['system_boundary'] = json.loads((Path(__file__).with_name('m1_boundary_schema.json')).read_text(encoding='utf-8'))
 
+SCHEMA['properties']['project']['properties']['electrical_drafts'] = DRAFT_SCHEMA
+
 def digest(model):
     data = copy.deepcopy(model)
     for key in ('view_layout', 'baseline', 'review_records'):
@@ -33,7 +36,7 @@ def validate(model):
               Draft202012Validator(SCHEMA, format_checker=FormatChecker()).iter_errors(model)]
     if errors:
         return {'valid': False, 'errors': errors, 'warnings': []}
-    errors += legacy.semantic_errors(model) + legacy.system_semantic_errors(model) + identity_errors(model)
+    errors += legacy.semantic_errors(model) + legacy.system_semantic_errors(model) + identity_errors(model) + electrical_errors(model)
     warnings = []
     sets = {}
     for collection, key in [('nodes','node_id'), ('ports','port_id'), ('edges','edge_id'),

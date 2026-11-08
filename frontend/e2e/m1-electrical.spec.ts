@@ -1,0 +1,10 @@
+import {test,expect} from '@playwright/test'
+test('Step05 edits a scoped electrical connection and updates readonly topology',async({page})=>{
+ await page.goto('/');await page.getByLabel('本次操作人').fill('接线测试');await page.getByRole('button',{name:'确认上下文，进入步骤02'}).click();await page.getByRole('button',{name:'05 电气连接',exact:true}).click();
+ await page.getByRole('button',{name:/编辑电气连接 /}).first().click();await expect(page.getByLabel('起点设备',{exact:true})).not.toHaveValue('');await expect(page.getByLabel('起点端口',{exact:true})).not.toHaveValue('');await expect(page.getByLabel('终点端口',{exact:true})).not.toHaveValue('');
+ await page.getByLabel('连接所属回路').selectOption({index:1});await page.getByLabel('接线 EPC 图纸').fill('SIM-DRAWING-01');await page.getByRole('button',{name:'保存电气连接并更新拓扑'}).click();await expect(page.getByRole('status').filter({hasText:'模拟接线已保存'})).toBeVisible();await expect(page.getByTestId('electrical-topology').first()).toBeVisible();
+ const diagram=page.getByTestId('electrical-topology').first();await diagram.scrollIntoViewIfNeeded();await diagram.hover();const before=await page.evaluate(()=>scrollY);await page.mouse.wheel(0,-250);await expect.poll(()=>page.evaluate(()=>scrollY)).toBeLessThan(before);
+ await page.reload();await page.getByRole('button',{name:'05 电气连接',exact:true}).click();await page.getByRole('button',{name:/编辑电气连接 /}).first().click();await expect(page.getByLabel('接线 EPC 图纸')).toHaveValue('SIM-DRAWING-01');
+ await page.getByLabel('选择 iEMS 环境').selectOption('REAL');await page.getByLabel('本次操作人').fill('现场工程师');await page.getByRole('button',{name:'确认上下文，进入步骤02'}).click();await page.getByRole('button',{name:'05 电气连接',exact:true}).click();await page.getByRole('button',{name:/编辑电气连接 /}).first().click();await expect(page.getByLabel('接线 EPC 图纸')).toHaveValue('');
+ await page.getByRole('button',{name:'取消编辑',exact:true}).click();await page.getByRole('button',{name:'新增电气连接'}).click();await page.getByRole('button',{name:'保存电气连接并更新拓扑'}).click();await expect(page.getByRole('alert')).toContainText('补齐');
+})
