@@ -31,6 +31,7 @@ from .sat_report import register_sat_report
 from .handover import register_handover
 from .m3_tracking import register_m3_tracking
 from .m1_baseline import register_baselines
+from .m1_delivery import register_delivery
 from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
 class Save(BaseModel):
@@ -97,6 +98,7 @@ def create_app(db_path=None):
     register_handover(app,db)
     register_m3_tracking(app,db)
     register_baselines(app,db)
+    register_delivery(app,db)
     register_workbench(app,db)
     register_fleet(app,db)
     register_system_tests(app,db)
