@@ -8,6 +8,7 @@ from .l5_settings import validate_settings
 from .m1_identity import identity_errors
 from .m1_electrical import DRAFT_SCHEMA, electrical_errors
 from .m1_network import NETWORK_SCHEMA, network_errors
+from .m1_communication_settings import SETTINGS_SCHEMA, settings_checks
 from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
@@ -27,6 +28,18 @@ SCHEMA['properties']['project']['properties']['system_boundary'] = json.loads((P
 SCHEMA['properties']['project']['properties']['electrical_drafts'] = DRAFT_SCHEMA
 
 SCHEMA['properties']['project']['properties']['network_drafts'] = NETWORK_SCHEMA
+SCHEMA['properties']['project']['properties']['communication_settings'] = SETTINGS_SCHEMA
+SCHEMA['properties']['device_models']['items']['properties']['communication_templates'] = {
+    'type': 'array', 'items': {'type': 'object', 'additionalProperties': False,
+        'required': ['id', 'version', 'master_data_version', 'domain', 'reference_doc', 'status', 'values'],
+        'properties': {
+            **{key: {'type': 'string', 'minLength': 1} for key in ('id', 'version', 'master_data_version', 'reference_doc')},
+            'domain': {'enum': ['RS485', 'ETHERNET', 'CAN']},
+            'status': {'enum': ['DRAFT', 'APPROVED']},
+            'values': {'type': 'object', 'additionalProperties': {'type': ['string', 'number', 'null']}}
+        }
+    }
+}
 
 def digest(model):
     data = copy.deepcopy(model)
@@ -40,7 +53,8 @@ def validate(model):
     if errors:
         return {'valid': False, 'errors': errors, 'warnings': []}
     errors += legacy.semantic_errors(model) + legacy.system_semantic_errors(model) + identity_errors(model) + electrical_errors(model) + network_errors(model)
-    warnings = []
+    communication_errors, warnings = settings_checks(model)
+    errors += communication_errors
     sets = {}
     for collection, key in [('nodes','node_id'), ('ports','port_id'), ('edges','edge_id'),
                             ('device_assets','asset_id'), ('device_models','model_id'),
