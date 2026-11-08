@@ -19,6 +19,7 @@ from .dynamic_tests import register_dynamic_tests
 from .commissioning import register_commissioning
 from .meter_workflow import register_meter_workflow
 from .pv_communication import register_pv_communication
+from .bess_communication import register_bess_communication
 from .checklist import register_checklist, checklist, VERSION as CHECKLIST_VERSION
 
 class Save(BaseModel):
@@ -73,6 +74,7 @@ def create_app(db_path=None):
     register_commissioning(app,db)
     register_meter_workflow(app,db)
     register_pv_communication(app,db)
+    register_bess_communication(app,db)
     register_workbench(app,db)
     register_fleet(app,db)
     register_system_tests(app,db)

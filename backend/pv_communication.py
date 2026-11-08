@@ -9,13 +9,13 @@ from .fleet import groups_for
 from .meter_workflow import states
 
 
-def inventory(model,controller):
+def inventory(model,controller,kind='PV_INVERTER'):
     nodes={n['node_id']:n for n in model['nodes']};ports={p['port_id']:p for p in model['ports']}
     assets={a['asset_id']:a for a in model['device_assets']};models={d['model_id']:d for d in model['device_models']}
-    sns=Counter(assets.get(n.get('device_asset_id'),{}).get('serial_number') for n in nodes.values() if n['node_type']=='PV_INVERTER')
+    sns=Counter(assets.get(n.get('device_asset_id'),{}).get('serial_number') for n in nodes.values() if n['node_type']==kind)
     groups={}
     for old in groups_for(model):
-        if old['kind']!='PV_INVERTER':continue
+        if old['kind']!=kind:continue
         for device in old['devices']:
             node=nodes[device['node_id']];asset=assets.get(node.get('device_asset_id'),{});dm=models.get(asset.get('model_id'),{})
             firmware=asset.get('firmware_version') or None
