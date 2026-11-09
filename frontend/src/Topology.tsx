@@ -1,5 +1,6 @@
 import {useEffect,useRef,useMemo} from 'react'
 import {Graph} from '@antv/x6'
+import {SingleLineTopology} from './SingleLineTopology'
 import {controlTopology} from './controlTopology'
 import type {Model,Kind,Flow} from './types'
 import {projectFramework} from './projectTopology'
@@ -10,10 +11,11 @@ const symbols:Record<string,string>={PCC:'⌁',BESS:'▥',EMS:'▤',METER:'◉',
 // L1 establishes the display framework; L2-L6 supply recorded engineering facts.
 export function automaticPositions(model:Model){return projectFramework(model).positions}
 export function Topology({model,flows}:{model:Model;flows:Record<string,Flow>}) {
- const groups=useMemo(()=>model.nodes.length>30?groupedTopology(model):null,[model])
- if(!groups)return <TopologyCanvas model={model} flows={flows}/>
- return <div className="topologyGroups"><div className="topologyGroupIntro"><strong>系统分区总览</strong><span>{model.nodes.length} 个工程对象 · {model.edges.length} 条端口连接 · 自动分组，只读</span><p>每条连接只在一个分区绘制。虚线设备为跨区引用，不是新增资产；通信与控制关系集中显示在第四区。滚轮上下浏览页面；使用 ＋ / − / 适应 按钮缩放图纸。</p></div>{groups.map((group,i)=><section className={'topologyGroup topologyGroup-'+group.id} key={group.id} aria-label={group.title+'拓扑'}><header><div><span className="topologyGroupNumber">0{i+1}</span><div><h3>{group.title}</h3><p>{group.subtitle}</p></div></div><span>{group.model.nodes.length-group.references.size} 个对象 · {group.references.size} 个跨区引用 · {group.model.edges.length} 条连接</span></header>{group.id==='control'?<ControlDiagrams group={group} flows={flows}/>:<TopologyCanvas model={group.model} flows={flows} diagram={group}/>}</section>)}</div>
+ const groups=useMemo(()=>groupedTopology(model),[model])
+ const control=groups.find(g=>g.id==='control')
+ return <><SingleLineTopology model={model}/>{control&&<details><summary>通信与控制关系</summary><ControlDiagrams group={control} flows={flows}/></details>}</>
 }
+
 function ControlDiagrams({group,flows}:{group:GroupDiagram;flows:Record<string,Flow>}){
  const sections=useMemo(()=>controlTopology(group),[group])
  return <div className="controlDiagrams"><div className="controlReading"><strong>先看计量反馈，再看单台 iEMS 的统一控制，最后核对通信链路</strong><p><span className="controlKey meterKey">蓝线：通信 / 计量接口</span><span className="controlKey commandKey">紫色虚线：逻辑控制指令</span><span className="controlKey supplyKey">绿线：辅助电气连接</span></p><small>各图仅取自已录入端口关系；虚线设备框为同一对象的引用。不能据此判定协议已兼容或零馈已生效。</small></div>{sections.map((section,i)=><section className="controlDiagram" key={section.id} aria-label={section.title+'关系图'}><header><div><span className="controlIndex">{i<4?'04.'+(i+1):'辅助'}</span><div><h4>{section.title}</h4><p>{section.subtitle}</p></div></div><span>{section.model.edges.length} 条已录入连接</span></header><TopologyCanvas model={section.model} flows={flows} diagram={section}/></section>)}</div>

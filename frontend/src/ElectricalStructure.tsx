@@ -1,5 +1,5 @@
-import {useEffect,useMemo,useRef,useState} from 'react'
-import {Graph} from '@antv/x6'
+import {useEffect,useState} from 'react'
+import {StructureTree} from './SingleLineTopology'
 import type {Model,Node} from './types'
 import './electricalStructure.css'
 const types:Record<string,string>={PCC:'并网点 PCC',TRANSFORMER_ZONE:'变压器区',TRANSFORMER:'变压器',MV_BUS:'中压母线',LV_BUS:'低压母线',COMBINER:'汇流柜',FEEDER:'馈线',BREAKER:'断路器'}
@@ -7,7 +7,7 @@ type Details={circuit_id?:string;voltage_level?:string;phase_system?:string;purp
 const metadata=(n:Node)=>(n.attributes?.engineering||{}) as Details
 const kind=(n:Node)=>metadata(n).structure_role==='COMBINER'?'COMBINER':n.node_type
 const included=(n:Node)=>!!types[n.node_type]&&!n.device_asset_id
-export function ElectricalStructure({model,change,save,dirty,back,next}:{model:Model;change:(m:Model)=>void;save:(m:Model)=>Promise<void>;dirty:boolean;back:()=>void;next:()=>void}){
+export function ElectricalStructure({model,change,save,dirty,back,next,environment='OFFLINE'}:{environment?:string;model:Model;change:(m:Model)=>void;save:(m:Model)=>Promise<void>;dirty:boolean;back:()=>void;next:()=>void}){
  const rows=model.nodes.filter(included), boundary=model.project.system_boundary as {scope?:string;reference?:string;domains?:{id:string;pcc_id:string}[]}|undefined
  const [editing,setEditing]=useState<string|null>(null),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[filter,setFilter]=useState('ALL'),[limit,setLimit]=useState(10)
  const blank=()=>({id:'',name:'',type:'FEEDER',parent:'',circuit:'',voltage:String(model.project.voltage_level),phase:'',purpose:'',epc:'',manufacturer:''})
@@ -42,23 +42,7 @@ export function ElectricalStructure({model,change,save,dirty,back,next}:{model:M
  {editing&&<section className="structureEditor" aria-label="结构编辑"><header><h3>{editing==='NEW'?'添加结构对象':'补充结构与回路归属'}</h3><button onClick={()=>setEditing(null)}>取消编辑</button></header><div className="startForm"><label>结构编号<input aria-label="结构编号" value={form.id} disabled={editing!=='NEW'} maxLength={128} onChange={e=>field('id',e.target.value)}/></label><label>结构名称<input aria-label="结构名称" value={form.name} maxLength={128} onChange={e=>field('name',e.target.value)}/></label><label>结构类型<select aria-label="结构类型" value={form.type} disabled={editing!=='NEW'} onChange={e=>field('type',e.target.value)}>{Object.entries(types).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label><label>所属结构<select aria-label="所属结构" value={form.parent} onChange={e=>field('parent',e.target.value)}><option value="">项目根节点（仅 PCC / 变压器区）</option>{parents.map(n=><option key={n.node_id} value={n.node_id}>{n.name} · {n.node_id}</option>)}</select></label><label>回路编号<input aria-label="回路编号" value={form.circuit} maxLength={128} onChange={e=>field('circuit',e.target.value)}/></label><label>设计电压等级<select aria-label="结构电压等级" value={form.voltage} onChange={e=>field('voltage',e.target.value)}><option value="">待确认</option><option>LV</option><option>MV</option></select></label><label>相制<select aria-label="结构相制" value={form.phase} onChange={e=>field('phase',e.target.value)}><option value="">待 EPC 确认</option><option>三相三线</option><option>三相四线</option><option>单相</option><option>不适用 / 待详细定义</option></select></label><label>用途<input aria-label="结构用途" value={form.purpose} onChange={e=>field('purpose',e.target.value)} placeholder="主配电 / 光伏汇流 / 储能汇流"/></label><label>EPC 图纸引用<input aria-label="EPC 图纸引用" value={form.epc} onChange={e=>field('epc',e.target.value)} placeholder="图号、版本、回路页码；缺失保留待补"/></label><label>厂家依据引用<input aria-label="厂家依据引用" value={form.manufacturer} onChange={e=>field('manufacturer',e.target.value)} placeholder="型号规格或端口文件；缺失保留待确认"/></label></div><p className="startHelp">不自动填写容量、额定电流、保护整定或电缆截面。录入引用仍为待核验，不产生批准结论。{dirty?'保存本对象将同时保存当前未保存的工程草案。':''}</p><button className="primary" disabled={busy} onClick={()=>void commit()}>{busy?'正在保存…':'保存结构并更新拓扑'}</button></section>}
  {error&&<p className="startError" role="alert">{error}</p>}{message&&<p className="startSuccess" role="status">{message}</p>}
  <div className="startPending"><b>依据待确认</b><span>EPC 补充现场图纸、回路归属和设计电压；厂家确认适用结构接口和设备规格。归属线不代表电气接线，结构已录入不代表工程批准。</span></div>
- <StructureTopology model={model}/>
+ <StructureTree model={model} expanded/>
  <div className="startActions"><button onClick={back}>返回步骤02</button><button onClick={next}>继续录入设备（现有作业区）</button></div>
  </article>
-}
-function StructureTopology({model}:{model:Model}){
- const nodes=useMemo(()=>model.nodes.filter(included),[model])
- const groups=useMemo(()=>{const groups=nodes.filter(p=>nodes.some(n=>n.parent_node_id===p.node_id)).map(p=>({id:p.node_id,title:p.name,nodes:[p,...nodes.filter(n=>n.parent_node_id===p.node_id)]}));const covered=new Set(groups.flatMap(g=>g.nodes.map(n=>n.node_id)));const rest=nodes.filter(n=>!covered.has(n.node_id));if(rest.length)groups.push({id:'unassigned',title:'独立结构 / 待归属',nodes:rest});return groups},[nodes])
- return <section aria-label="电气结构只读拓扑"><h3>电气结构归属图</h3><p className="startHelp">按所属结构自动分组，共{nodes.length}个对象。每组顶部为上级引用，不新增对象。虚线仅表示归属，电气接线在步骤05定义。</p>{groups.map(g=><StructureGroup key={g.id} nodes={g.nodes} title={g.title}/>)}</section>
-}
-function StructureGroup({nodes,title}:{nodes:Node[];title:string}){
- const container=useRef<HTMLDivElement>(null),graph=useRef<Graph|null>(null)
- const height=Math.max(280,160+Math.ceil(Math.max(0,nodes.length-1)/4)*85)
- useEffect(()=>{const g=new Graph({container:container.current!,height,width:container.current!.clientWidth,interacting:false,panning:false,mousewheel:{enabled:false},background:{color:'#f6f8f4'}});graph.current=g;const resize=new ResizeObserver(()=>{g.resize(container.current!.clientWidth,height);g.zoomToFit({padding:24,maxScale:1})});resize.observe(container.current!);return()=>{resize.disconnect();g.dispose();graph.current=null}},[height])
- useEffect(()=>{const g=graph.current;if(!g)return;g.clearCells();const ids=new Set(nodes.map(n=>n.node_id));const columns=Math.min(4,Math.max(1,nodes.length-1))
- for(const [i,n] of nodes.entries()){const pos=i===0?{x:(columns-1)*120,y:0}:{x:((i-1)%4)*240,y:100+Math.floor((i-1)/4)*85};g.addNode({id:n.node_id,...pos,width:215,height:48,attrs:{body:{fill:i===0?'#eaf2e7':'#fff',stroke:'#91ac98',rx:6,ry:6},label:{text:(i===0?'上级 / ':'')+n.name+'\n'+n.node_id,fontSize:11,fill:'#31513b',textWrap:{width:200,height:44,ellipsis:true}}}})}
- for(const n of nodes)if(n.parent_node_id&&ids.has(n.parent_node_id))g.addEdge({source:n.parent_node_id,target:n.node_id,router:{name:'orth'},attrs:{line:{stroke:'#b4bdb1',strokeDasharray:'5 4',targetMarker:null}}})
- g.zoomToFit({padding:24,maxScale:1})
- },[nodes])
- return <section className="structureDiagram" aria-label={title+'归属图'}><header><div><h3>{title}</h3><p>只读归属关系 · 不代表电气接线</p></div><div><button aria-label="缩小结构图" onClick={()=>graph.current?.zoom(-.15)}>−</button><button onClick={()=>graph.current?.zoomToFit({padding:24,maxScale:1})}>适应结构图</button><button aria-label="放大结构图" onClick={()=>graph.current?.zoom(.15)}>＋</button></div></header><div ref={container} style={{height}} data-testid="structure-topology"/><p>只允许按钮缩放；图上不能移动、连接或编辑。滚轮继续滚动页面。</p></section>
 }
