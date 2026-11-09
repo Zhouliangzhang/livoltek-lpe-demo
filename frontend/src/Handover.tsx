@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react'
 import {api,type Model} from './types'
 import type {Issue} from './readinessIssues'
 import {EvidenceContent,type Report} from './SatReport'
+import {DualDelivery} from './DualDelivery'
 import {M3Tracking} from './M3Tracking'
 import './satReport.css'
 import './handover.css'
@@ -35,6 +36,9 @@ export function HandoverStep({planId,sessionId,mode,blocked,go,openM3}:{planId:s
 }
 export function ProjectHandover({projectId,mode,selectedId,selectPackage,locate,support,openStep,dirty}:{projectId:string;mode:string;selectedId:string;selectPackage:(id:string)=>void;locate:(i:Issue)=>void;support:(s:string)=>void;openStep:(t:HandoverTarget)=>void;dirty:boolean}){
  const [list,setList]=useState<Brief[]>([]),[detail,setDetail]=useState<{package:Package;current:boolean}|null>(null),[error,setError]=useState(''),[loaded,setLoaded]=useState(false),[evidence,setEvidence]=useState(''),[showModel,setShowModel]=useState(false),[evidenceFilter,setEvidenceFilter]=useState('')
+ const [commonOpen,setCommonOpen]=useState(false)
+ const commonRef=useRef<HTMLDetailsElement>(null)
+ useEffect(()=>{if(commonOpen)commonRef.current?.scrollIntoView({block:'start',behavior:'smooth'})},[commonOpen])
  const [refreshCounter,setRefreshCounter]=useState(0)
  const evidenceRef=useRef<HTMLElement>(null)
  useEffect(()=>{if(evidence)evidenceRef.current?.scrollIntoView({behavior:'smooth',block:'start'})},[evidence])
@@ -45,10 +49,10 @@ export function ProjectHandover({projectId,mode,selectedId,selectPackage,locate,
  function step(n:number){if(pack)openStep({plan_id:pack.plan_id,session_id:pack.session_id,step:n-1,nonce:crypto.randomUUID()})}
  function target(n:number,layer:string|null,node:string|null,row:string|null|undefined,message:string,action:string){if(!layer){step(n);return}locate({id:'handover-'+(row||node||n),category:'待厂家确认',layer,nodeId:node||undefined,rowId:row||undefined,object:node||'系统',message,action})}
  return <section className="satReport hoWorkspace" aria-label="M3项目交接包">
- <div className="satBanner"><div><small>M3 / PROJECT HANDOVER</small><h3>{sim?'模拟项目交接 · 资料与遗留事项':'现场项目交接 · 资料准备'}</h3><p>从封存版本查看配置、测试与原始证据。逐项处理遗留问题，保持每次移交的依据可追溯。</p></div><span className="satSeal">{sim?'SIMULATION':'FIELD DRAFT'}<b>不作验收结论</b></span></div>
+ <div className="satBanner"><div><small>M3 / PROJECT HANDOVER</small><h3>{sim?'双向项目交接 · 模拟演练':'双向项目交接 · 现场准备'}</h3><p>面向EPC交付技术资料，面向厂家建立服务档案。共用M1与M2依据，各自记录状态和回执。</p></div><span className="satSeal">{sim?'SIMULATION':'FIELD DRAFT'}<b>不作验收结论</b></span></div>
  {error&&<p className="mwAlert" role="alert">{error}</p>}
  {!loaded?<p>正在读取交接包…</p>:!list.length?<div className="satEmpty"><h4>{sim?'尚无模拟交接包':'尚无现场交接资料包'}</h4><p>请在 M2 步骤13保存报告，再到步骤14封存。{sim?'':'模拟包不会显示在现场环境中；真实现场接收及验收仍未实现。'}</p></div>:<label className="hoSelect">选择封存版本<select aria-label="选择交接包" value={selectedId} onChange={e=>selectPackage(e.target.value)}>{list.map(p=><option key={p.id} value={p.id}>交接V{p.handover_version||1} / M1 R{p.revision} · {new Date(p.created).toLocaleString()} · {p.prepared_by} · {p.id.slice(0,8)}</option>)}</select></label>}
- {pack&&<><div className="satMeta"><span>交接V{pack.handover_version||1} / M1 R{pack.revision} · {pack.prepared_by}</span><span>{new Date(pack.created).toLocaleString()}</span><span>报告 {pack.report_id.slice(0,12)}</span><span>未签署 · 无现场验收结论</span></div>
+ {pack&&<><DualDelivery key={pack.id+mode} projectId={projectId} pid={pack.id} mode={mode} dirty={dirty} issues={()=>{setCommonOpen(true);commonRef.current?.scrollIntoView({block:'start',behavior:'smooth'})}}/><details ref={commonRef} open={commonOpen} onToggle={e=>setCommonOpen(e.currentTarget.open)} className="satDetails"><summary>共同基线、技术待办与原始证据</summary><div className="satMeta"><span>交接V{pack.handover_version||1} / M1 R{pack.revision} · {pack.prepared_by}</span><span>{new Date(pack.created).toLocaleString()}</span><span>报告 {pack.report_id.slice(0,12)}</span><span>未签署 · 无现场验收结论</span></div>
  <p className={detail.current&&!dirty?'satEmpty':'mwAlert'}>{detail.current&&!dirty?'交接包对应当前已保存依据。':'当前工作区或测试已变化；下方仍展示封存版本，修改后需重新验证并生成新包。'} 定位处理将打开对应工程对象，不改写封存记录。</p>
  <div className="satStats"><div><strong>{pack.followup.incomplete.length}</strong><span>未完成 / 待确认步骤</span></div><div><strong>{pack.followup.issues.filter(x=>!x.resolved).length}</strong><span>本轮未关闭异常</span></div><div><strong>{pack.followup.pending.length}</strong><span>待补充主题</span></div><div><strong>{pack.report.manifest.length}</strong><span>原始证据记录</span></div></div>
  <div className="satActions"><a href={'/api'+base+'/'+pack.id+'/export?mode='+mode}>下载完整交接包 ZIP</a><button onClick={()=>step(14)}>返回步骤14</button><button onClick={()=>step(13)}>返回步骤13核对报告</button></div>
@@ -62,8 +66,9 @@ export function ProjectHandover({projectId,mode,selectedId,selectPackage,locate,
  </details>
  <details className="satDetails"><summary>恢复记录与历史异常 · {pack.followup.issues.filter(x=>x.resolved).length+pack.followup.historical_issues.length}项</summary><p>历史运行被替代不代表异常关闭；恢复仅按对应原始记录表述。</p>{[...pack.followup.issues.filter(x=>x.resolved),...pack.followup.historical_issues].map((x,i)=><div className="satHistorical" key={i}><span>步骤{x.step} · {x.node_id||'系统'} · {x.reason} · {x.resolved?'有恢复记录':'历史未关闭 / 待复核'}</span><button onClick={()=>setEvidence(x.evidence_id)}>查看历史证据</button></div>)}</details>
  <details className="satDetails"><summary>封存原始证据目录 · {pack.report.manifest.length}份</summary><label>筛选运行记录<input aria-label="筛选封存证据" value={evidenceFilter} onChange={e=>setEvidenceFilter(e.target.value)} placeholder="运行ID或记录类型"/></label>{pack.report.manifest.filter(m=>(m.kind+' '+m.id).includes(evidenceFilter)).map(m=><div className="satHistorical" key={m.id}><span>{m.kind} · {m.id.slice(0,12)} · {new Date(m.created).toLocaleString()}</span><button onClick={()=>setEvidence(m.id)}>查看封存原始记录</button></div>)}</details>
- {evidence&&pack.report.raw_evidence[evidence]&&<section ref={evidenceRef} className="satEvidence" aria-label="封存原始证据详情"><header><h3>封存证据 · {evidence.slice(0,12)}</h3><button onClick={()=>setEvidence('')}>收起封存证据</button></header><EvidenceContent raw={pack.report.raw_evidence[evidence]}/></section>}
+ {evidence&&!!pack.report.raw_evidence[evidence]&&<section ref={evidenceRef} className="satEvidence" aria-label="封存原始证据详情"><header><h3>封存证据 · {evidence.slice(0,12)}</h3><button onClick={()=>setEvidence('')}>收起封存证据</button></header><EvidenceContent raw={pack.report.raw_evidence[evidence]}/></section>}
  <details className="satDetails"><summary>封存清单与校验值</summary><p>包编号 {pack.id}<br/>封存校验 {pack.seal_hash}<br/>校验用于检查内容一致性，不是电子签名或验收签署。</p>{pack.manifest.map(m=><p key={m.key}>{fileLabels[m.key]||m.key} · {m.hash}</p>)}</details>
- <p className="satFootnote">{pack.handover_boundary}。{sim?'模拟完成不等于现场验收通过。':'尚无真实现场交接和验收签署。'}问题处理记录应回到对应步骤或M1，更新后再形成新报告和新交接包。</p></>}
+ <p className="satFootnote">{pack.handover_boundary}。{sim?'模拟完成不等于现场验收通过。':'尚无真实现场交接和验收签署。'}问题处理记录应回到对应步骤或M1，更新后再形成新报告和新交接包。</p></details></>}
  </section>
 }
+

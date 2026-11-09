@@ -1,3 +1,4 @@
+from .dual_delivery import register_dual_delivery
 from .field_service import register_field_service
 import copy
 import math
@@ -98,6 +99,7 @@ def create_app(db_path=None):
     register_continuous_observation(app,db)
     register_sat_report(app,db)
     register_handover(app,db)
+    register_dual_delivery(app,db)
     register_field_service(app,db)
     register_m3_tracking(app,db)
     register_baselines(app,db)
