@@ -103,7 +103,7 @@ def register_field_service(app,db):
     @app.get('/api/projects/{project}/service/{cid}')
     def detail(project:str,cid:str,mode:Mode='SIMULATION'):
         c=get_case(project,cid,mode)
-        return dict(case=c,steps=records(c),support=db.records('service_support',cid),remedy=sorted(db.records('service_remedy',cid),key=lambda r:r['step']),stale=db.get(project)['revision']!=c['current_revision'],field_connected=False)
+        return dict(case=c,origin=db.records('rsp_ticket_link',cid),steps=records(c),support=db.records('service_support',cid),remedy=sorted(db.records('service_remedy',cid),key=lambda r:r['step']),stale=db.get(project)['revision']!=c['current_revision'],field_connected=False)
 
     @app.post('/api/projects/{project}/service/{cid}/diagnose')
     def diagnose(project:str,cid:str,body:Step):
@@ -197,7 +197,7 @@ def register_field_service(app,db):
         closed=bool(closures)
         can_close=mode=='SIMULATION' and not pending and not stale and any(r.get('simulation_recovered') for r in rs) and not closed
         evidence=[dict(id=r['id'],title=r['title'],created=r['created'],stage=stage,target=('diagnosis-' if stage==1 else 'remedy-')+str(r['step']),source=r['source'],summary=r.get('observation',r.get('summary','')),record=deepcopy(r)) for stage,items in [(1,ds),(2,rs)] for r in items]
-        return dict(case_id=cid,mode=mode,source='SIMULATOR' if mode=='SIMULATION' else 'FIELD_PREPARATION',symptom=c['symptom'],occurred_at=c['occurred_at'],reporter=c['reporter'],device=c['device'],device_id=c['device_id'],package_id=c['package_id'],baseline_hash=c['baseline_hash'],baseline_revision=c['baseline_revision'],intake_revision=c['current_revision'],current_revision=db.get(project)['revision'],changes=c['changes'],root_cause=ds[-1].get('conclusion') if ds else None,evidence=evidence,original_case=deepcopy(c),collaboration=deepcopy(support),pending=pending,resolved=resolved,handling_history=processing,closure=closures[0] if closures else None,simulation_recovered=any(r.get('simulation_recovered') for r in rs),field_repaired=False,can_close=can_close,service_status='SIMULATION_CLOSED' if closed else 'OPEN',stale=stale,manufacturer_basis='PENDING',warranty='未判定')
+        return dict(case_id=cid,origin=db.records('rsp_ticket_link',cid),mode=mode,source='SIMULATOR' if mode=='SIMULATION' else 'FIELD_PREPARATION',symptom=c['symptom'],occurred_at=c['occurred_at'],reporter=c['reporter'],device=c['device'],device_id=c['device_id'],package_id=c['package_id'],baseline_hash=c['baseline_hash'],baseline_revision=c['baseline_revision'],intake_revision=c['current_revision'],current_revision=db.get(project)['revision'],changes=c['changes'],root_cause=ds[-1].get('conclusion') if ds else None,evidence=evidence,original_case=deepcopy(c),collaboration=deepcopy(support),pending=pending,resolved=resolved,handling_history=processing,closure=closures[0] if closures else None,simulation_recovered=any(r.get('simulation_recovered') for r in rs),field_repaired=False,can_close=can_close,service_status='SIMULATION_CLOSED' if closed else 'OPEN',stale=stale,manufacturer_basis='PENDING',warranty='未判定')
 
     @app.get('/api/projects/{project}/service/{cid}/report')
     def service_report(project:str,cid:str,mode:Mode='SIMULATION'):

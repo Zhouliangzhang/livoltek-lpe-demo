@@ -1,3 +1,4 @@
+from .rsp_tickets import register_rsp_tickets
 from .dual_delivery import register_dual_delivery
 from .field_service import register_field_service
 import copy
@@ -101,6 +102,7 @@ def create_app(db_path=None):
     register_handover(app,db)
     register_dual_delivery(app,db)
     register_field_service(app,db)
+    register_rsp_tickets(app,db)
     register_m3_tracking(app,db)
     register_baselines(app,db)
     register_delivery(app,db)
